@@ -361,7 +361,9 @@ public class RelatorioViagemService {
                      )) {
 
             float x = 50;
-            float y = 735;
+            // A logo ocupa a faixa superior; o título começa abaixo do
+            // subtítulo para não haver sobreposição no PDF.
+            float y = 715;
 
             desenharLogo(conteudo, x, 755, fonteNormal, fonteNegrito);
 
@@ -803,7 +805,8 @@ public class RelatorioViagemService {
                          )) {
 
                 float x = 50;
-                float y = 735;
+                // Mantém o mesmo cabeçalho reservado nas páginas de cada dia.
+                float y = 710;
 
                 desenharLogo(conteudo, x, 755, fonteNormal, fonteNegrito);
 
