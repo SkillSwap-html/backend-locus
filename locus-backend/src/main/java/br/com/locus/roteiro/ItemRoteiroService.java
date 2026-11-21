@@ -69,6 +69,7 @@ public class ItemRoteiroService {
                 itemRoteiro,
                 null
         );
+        validarEspacamentoDuasHoras(diaRoteiroId, itemRoteiro, null);
 
         return itemRoteiroRepository.save(
                 itemRoteiro
@@ -152,6 +153,7 @@ public class ItemRoteiroService {
                 itemExistente,
                 itemExistente.getId()
         );
+        validarEspacamentoDuasHoras(diaRoteiroId, itemExistente, itemExistente.getId());
 
         return itemRoteiroRepository.save(
                 itemExistente
@@ -570,6 +572,25 @@ public class ItemRoteiroService {
                                 itemExistente.getHorarioInicio(),
                                 fimFormatado
                         )
+                );
+            }
+        }
+    }
+
+    private void validarEspacamentoDuasHoras(
+            Long diaRoteiroId,
+            ItemRoteiro itemRoteiro,
+            Long itemIgnoradoId) {
+
+        List<ItemRoteiro> itensExistentes = itemRoteiroRepository
+                .findByDiaRoteiroIdOrderByOrdemAsc(diaRoteiroId);
+        int novoInicio = itemRoteiro.getHorarioInicio().toSecondOfDay() / 60;
+        for (ItemRoteiro existente : itensExistentes) {
+            if (itemIgnoradoId != null && existente.getId().equals(itemIgnoradoId)) continue;
+            int inicioExistente = existente.getHorarioInicio().toSecondOfDay() / 60;
+            if (Math.abs(novoInicio - inicioExistente) < 120) {
+                throw new RuntimeException(
+                        "Mantenha pelo menos 2 horas entre o início de uma atividade e outra."
                 );
             }
         }

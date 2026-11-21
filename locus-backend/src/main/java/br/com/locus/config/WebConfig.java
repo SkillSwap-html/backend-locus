@@ -61,6 +61,11 @@ public class WebConfig {
         if (normalizado.endsWith("\"") || normalizado.endsWith("'")) {
             normalizado = normalizado.substring(0, normalizado.length() - 1).trim();
         }
-        return normalizado;
+        // Railway/arquivos exportados às vezes chegam com a URL escapada
+        // (https\://...). O navegador envia o Origin sem essas barras.
+        return normalizado
+                .replace("\\:", ":")
+                .replace("\\/", "/")
+                .replace("\\,", ",");
     }
 }
