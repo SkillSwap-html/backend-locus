@@ -4,10 +4,13 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn ./.mvn
 COPY pom.xml .
-RUN chmod +x mvnw && ./mvnw dependency:go-offline
+RUN chmod +x mvnw
+
+ENV MAVEN_OPTS="-Xmx1024m"
+RUN ./mvnw dependency:go-offline -B
 
 COPY src ./src
-RUN ./mvnw clean package -DskipTests -Powasp-skip
+RUN ./mvnw clean package -DskipTests -B
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
@@ -19,4 +22,4 @@ EXPOSE 8080
 RUN groupadd --system app && useradd --system -g app app
 USER app
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -XX:MaxRAMPercentage=75.0 -jar /app/app.jar"]
