@@ -262,7 +262,21 @@ public class RelatorioViagemService {
                 usuarioSolicitanteId
         );
 
-        return buscarPorReserva(reservaId);
+        return relatorioViagemRepository
+                .findByReservaSimuladaId(reservaId)
+                .orElseGet(() -> {
+                    if (reserva.getStatus()
+                            != StatusReservaSimulada.CONFIRMADA_EM_SIMULACAO) {
+
+                        throw new RuntimeException(
+                                "O relatório só pode ser gerado após a confirmação da simulação."
+                        );
+                    }
+
+                    // Compatibilidade com versões antigas do frontend que
+                    // consultavam o relatório por GET antes de existir.
+                    return gerar(reservaId);
+                });
     }
 
     private byte[] gerarPdf(ReservaSimulada reserva) {
