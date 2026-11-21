@@ -43,7 +43,7 @@ Variáveis principais:
 - `DB_URL`: URL JDBC do PostgreSQL;
 - `DB_USERNAME`: usuário do banco;
 - `DB_PASSWORD`: senha do banco;
-- `REDIS_HOST` e `REDIS_PORT`: endereço do Redis;
+- `REDIS_URL`: URL de conexão do Redis;
 - `FLYWAY_ENABLED`: habilita as migrations;
 - `SECURITY_ENABLED`: habilita a validação de tokens;
 - `FIREBASE_PROJECT_ID`: projeto Firebase usado para validar tokens;
