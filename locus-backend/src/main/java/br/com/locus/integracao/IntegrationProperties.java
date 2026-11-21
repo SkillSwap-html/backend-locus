@@ -5,6 +5,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.integrations")
 public class IntegrationProperties {
 
+    private static String normalizarConfiguracao(String valor) {
+        String normalizado = valor == null ? "" : valor.trim();
+        if ((normalizado.startsWith("\"") && normalizado.endsWith("\""))
+                || (normalizado.startsWith("'") && normalizado.endsWith("'"))) {
+            normalizado = normalizado.substring(1, normalizado.length() - 1).trim();
+        }
+        return normalizado.replace("\\:", ":").replace("\\/", "/");
+    }
+
     private final Google google = new Google();
     private final Gemini gemini = new Gemini();
     private final Groq groq = new Groq();
@@ -67,7 +76,7 @@ public class IntegrationProperties {
         }
 
         public void setJavascriptApiKey(String javascriptApiKey) {
-            this.javascriptApiKey = javascriptApiKey;
+            this.javascriptApiKey = normalizarConfiguracao(javascriptApiKey);
         }
 
         public String getApiKey() {
@@ -75,7 +84,7 @@ public class IntegrationProperties {
         }
 
         public void setApiKey(String apiKey) {
-            this.apiKey = apiKey;
+            this.apiKey = normalizarConfiguracao(apiKey);
         }
 
         public String getBaseUrl() {
@@ -83,7 +92,7 @@ public class IntegrationProperties {
         }
 
         public void setBaseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+            this.baseUrl = normalizarConfiguracao(baseUrl);
         }
 
         public int getTimeoutMs() {
@@ -128,7 +137,7 @@ public class IntegrationProperties {
         }
 
         public void setApiKey(String apiKey) {
-            this.apiKey = apiKey;
+            this.apiKey = normalizarConfiguracao(apiKey);
         }
 
         public String getBaseUrl() {
@@ -136,7 +145,7 @@ public class IntegrationProperties {
         }
 
         public void setBaseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+            this.baseUrl = normalizarConfiguracao(baseUrl);
         }
 
         public String getModel() {
@@ -144,7 +153,7 @@ public class IntegrationProperties {
         }
 
         public void setModel(String model) {
-            this.model = model;
+            this.model = normalizarConfiguracao(model);
         }
 
         public int getTimeoutMs() {
@@ -204,7 +213,7 @@ public class IntegrationProperties {
         }
 
         public void setApiKey(String apiKey) {
-            this.apiKey = apiKey;
+            this.apiKey = normalizarConfiguracao(apiKey);
         }
 
         public String getBaseUrl() {
@@ -212,7 +221,7 @@ public class IntegrationProperties {
         }
 
         public void setBaseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+            this.baseUrl = normalizarConfiguracao(baseUrl);
         }
 
         public String getModel() {
@@ -220,7 +229,7 @@ public class IntegrationProperties {
         }
 
         public void setModel(String model) {
-            this.model = model;
+            this.model = normalizarConfiguracao(model);
         }
 
         public int getTimeoutMs() {

@@ -8,6 +8,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -15,18 +16,26 @@ public class WebConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
-            @Value("${app.cors.allowed-origins:http://localhost:5173}")
+            @Value("${app.cors.allowed-origins:http://localhost:5173,https://locus-frontend-production.up.railway.app}")
             String allowedOrigins) {
 
         CorsConfiguration configuration = new CorsConfiguration();
         String origensConfiguradas = normalizarTextoConfiguracao(allowedOrigins);
-        configuration.setAllowedOrigins(
+        List<String> origens = new ArrayList<>(
                 Arrays.stream(origensConfiguradas.split(","))
                         .map(String::trim)
                         .map(this::normalizarOrigem)
                         .filter(origin -> !origin.isBlank())
+                        .distinct()
                         .toList()
         );
+        // Mantém o endereço publicado autorizado mesmo se o valor do Railway
+        // vier vazio, com aspas ou tiver sido copiado com barras de escape.
+        String frontendPublicado = "https://locus-frontend-production.up.railway.app";
+        if (!origens.contains(frontendPublicado)) {
+            origens.add(frontendPublicado);
+        }
+        configuration.setAllowedOrigins(origens);
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );

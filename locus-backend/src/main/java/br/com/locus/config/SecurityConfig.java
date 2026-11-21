@@ -73,13 +73,14 @@ public class SecurityConfig {
     public JwtDecoder jwtDecoder(
             @Value("${app.firebase.project-id}") String projectId) {
 
-        if (projectId == null || projectId.isBlank()) {
+        String projectIdNormalizado = normalizarConfiguracao(projectId);
+        if (projectIdNormalizado.isBlank()) {
             throw new IllegalStateException(
                     "FIREBASE_PROJECT_ID deve ser informado quando SECURITY_ENABLED=true."
             );
         }
 
-        String issuer = "https://securetoken.google.com/" + projectId;
+        String issuer = "https://securetoken.google.com/" + projectIdNormalizado;
         String googleJwksUrl =
                 "https://www.googleapis.com/service_accounts/v1/jwk/"
                         + "securetoken@system.gserviceaccount.com";
@@ -91,7 +92,7 @@ public class SecurityConfig {
                 JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> audienceValidator = jwt -> {
             List<String> audience = jwt.getAudience();
-            if (audience != null && audience.contains(projectId)) {
+            if (audience != null && audience.contains(projectIdNormalizado)) {
                 return OAuth2TokenValidatorResult.success();
             }
             return OAuth2TokenValidatorResult.failure(
@@ -107,6 +108,15 @@ public class SecurityConfig {
         );
 
         return decoder;
+    }
+
+    private String normalizarConfiguracao(String valor) {
+        String normalizado = valor == null ? "" : valor.trim();
+        if ((normalizado.startsWith("\"") && normalizado.endsWith("\""))
+                || (normalizado.startsWith("'") && normalizado.endsWith("'"))) {
+            normalizado = normalizado.substring(1, normalizado.length() - 1).trim();
+        }
+        return normalizado.replace("\\:", ":").replace("\\/", "/");
     }
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {

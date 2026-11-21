@@ -42,6 +42,15 @@ public class DiaRoteiroService {
                 diaRoteiro
         );
 
+        // A criação dos dias é idempotente: o frontend pode garantir todos
+        // os dias em paralelo sem duplicar a mesma data ao recarregar o
+        // roteiro ou ao trocar de dia no assistente.
+        Optional<DiaRoteiro> existente = diaRoteiroRepository
+                .findByViagemIdAndData(viagemId, diaRoteiro.getData());
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+
         diaRoteiro.setViagem(viagem);
 
         return diaRoteiroRepository.save(

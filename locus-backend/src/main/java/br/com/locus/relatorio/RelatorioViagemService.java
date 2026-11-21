@@ -339,7 +339,7 @@ public class RelatorioViagemService {
             float x = 50;
             float y = 735;
 
-            desenharMarca(conteudo, x, 770, fonteNegrito);
+            desenharLogo(conteudo, x, 785, fonteNormal, fonteNegrito);
 
             escreverTexto(
                     conteudo,
@@ -347,7 +347,7 @@ public class RelatorioViagemService {
                     18,
                     "Seu roteiro de viagem",
                     x,
-                    y
+                    y - 5
             );
 
             y -= 40;
@@ -741,13 +741,15 @@ public class RelatorioViagemService {
                                  pagina
                          )) {
 
+                desenharLogo(conteudo, 50, 785, fonteNormal, fonteNegrito);
+
                 escreverTexto(
                         conteudo,
                         fonteNegrito,
                         16,
                         "Roteiro da Viagem",
                         50,
-                        750
+                        735
                 );
 
                 escreverTexto(
@@ -775,7 +777,9 @@ public class RelatorioViagemService {
                          )) {
 
                 float x = 50;
-                float y = 750;
+                float y = 735;
+
+                desenharLogo(conteudo, x, 785, fonteNormal, fonteNegrito);
 
                 escreverTexto(
                         conteudo,
@@ -942,10 +946,11 @@ public class RelatorioViagemService {
         conteudo.endText();
     }
 
-    private void desenharMarca(
+    private void desenharLogo(
             PDPageContentStream conteudo,
             float x,
             float y,
+            PDType1Font fonteNormal,
             PDType1Font fonteNegrito) throws IOException {
 
         conteudo.setNonStrokingColor(
@@ -974,26 +979,42 @@ public class RelatorioViagemService {
         conteudo.setNonStrokingColor(
                 new PDColor(new float[]{0.46f, 0.40f, 0.66f}, PDDeviceRGB.INSTANCE)
         );
-        conteudo.addRect(x + 20, y - 10, 76, 3);
+        conteudo.moveTo(centroX, centroY - 6);
+        conteudo.lineTo(centroX + 2.2f, centroY - 2.2f);
+        conteudo.lineTo(centroX + 6, centroY);
+        conteudo.lineTo(centroX + 2.2f, centroY + 2.2f);
+        conteudo.lineTo(centroX, centroY + 6);
+        conteudo.lineTo(centroX - 2.2f, centroY + 2.2f);
+        conteudo.lineTo(centroX - 6, centroY);
+        conteudo.lineTo(centroX - 2.2f, centroY - 2.2f);
+        conteudo.closePath();
         conteudo.fill();
 
         escreverTexto(
                 conteudo,
                 fonteNegrito,
-                20,
-                "LOCUS",
-                x + 20,
+                24,
+                "Locus",
+                x + 38,
                 y + 1
         );
 
         escreverTexto(
                 conteudo,
-                fonteNegrito,
-                8,
+                fonteNormal,
+                7,
                 "Planeje viagens com inteligencia",
-                x + 20,
+                x + 38,
                 y - 13
         );
+
+        conteudo.setNonStrokingColor(
+                new PDColor(new float[]{0.44f, 0.65f, 0.54f}, PDDeviceRGB.INSTANCE)
+        );
+        conteudo.setLineWidth(1.2f);
+        conteudo.moveTo(x + 39, y - 19);
+        conteudo.lineTo(x + 103, y - 19);
+        conteudo.stroke();
 
         conteudo.setNonStrokingColor(
                 new PDColor(new float[]{0.15f, 0.20f, 0.23f}, PDDeviceRGB.INSTANCE)

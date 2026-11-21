@@ -24,7 +24,7 @@ public class UsuarioService {
             @Value("${app.admin.initial-email:}") String adminInitialEmail) {
         this.usuarioRepository = usuarioRepository;
         this.adminEmailRepository = adminEmailRepository;
-        this.adminInitialEmail = adminInitialEmail == null ? "" : adminInitialEmail.trim();
+        this.adminInitialEmail = normalizarConfiguracao(adminInitialEmail);
     }
 
     public Usuario salvar(Usuario usuario) {
@@ -101,6 +101,15 @@ public class UsuarioService {
         return email != null
                 && (email.equalsIgnoreCase(adminInitialEmail)
                 || adminEmailRepository.existsByEmailIgnoreCase(email));
+    }
+
+    private String normalizarConfiguracao(String valor) {
+        String normalizado = valor == null ? "" : valor.trim();
+        if ((normalizado.startsWith("\"") && normalizado.endsWith("\""))
+                || (normalizado.startsWith("'") && normalizado.endsWith("'"))) {
+            normalizado = normalizado.substring(1, normalizado.length() - 1).trim();
+        }
+        return normalizado;
     }
 
     public List<Usuario> listarTodos() {
