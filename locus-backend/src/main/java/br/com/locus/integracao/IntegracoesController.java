@@ -61,6 +61,7 @@ public class IntegracoesController {
                         + "\"justificativa\":\"por que combina com o pedido\",\"consulta\":\"consulta para Places\","
                         + "\"valor\":0,\"categoria\":\"passagem|hospedagem|visitas|alimentacao|transporteLocal|extras\","
                         + "\"natureza\":\"observado|estimado|simulado\",\"evidencia\":{\"fonte\":\"fonte e URL quando houver\",\"consultadoEm\":\"data\"}}]} . "
+                        + "Use no máximo 4 consultas e 4 recomendações, com textos curtos, para que a resposta nunca seja cortada no meio do JSON. "
                         + "Conduza a conversa por etapas: primeiro passagem, depois hospedagem e só então roteiro de turismo. "
                         + "Se a pessoa já informou uma etapa, avance sem repetir perguntas. "
                         + "Em pedidos de roteiro, turismo ou recomendações de locais, nunca retorne somente hotéis: inclua consultas separadas para praias, restaurantes/gastronomia e pontos turísticos, museus, parques ou atrações. "
