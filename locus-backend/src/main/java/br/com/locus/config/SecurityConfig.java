@@ -14,8 +14,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.validator.JwtClaimValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
@@ -83,11 +84,19 @@ public class SecurityConfig {
 
         OAuth2TokenValidator<Jwt> issuerValidator =
                 JwtValidators.createDefaultWithIssuer(issuer);
-        OAuth2TokenValidator<Jwt> audienceValidator =
-                new JwtClaimValidator<List<String>>(
-                        "aud",
-                        audience -> audience != null && audience.contains(projectId)
-                );
+        OAuth2TokenValidator<Jwt> audienceValidator = jwt -> {
+            List<String> audience = jwt.getAudience();
+            if (audience != null && audience.contains(projectId)) {
+                return OAuth2TokenValidatorResult.success();
+            }
+            return OAuth2TokenValidatorResult.failure(
+                    new OAuth2Error(
+                            "invalid_token",
+                            "The token audience does not match the Firebase project.",
+                            null
+                    )
+            );
+        };
         decoder.setJwtValidator(
                 new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator)
         );
