@@ -35,7 +35,29 @@ public class GooglePlacesClient {
         return post("/v1/places:searchText", body,
                 "places.displayName,places.formattedAddress,places.location,"
                         + "places.id,places.rating,places.priceLevel,places.types,"
-                        + "places.currentOpeningHours,places.editorialSummary");
+                        + "places.currentOpeningHours,places.editorialSummary,places.photos");
+    }
+
+    public byte[] photo(String photoName, Integer maxWidthPx) {
+        requireConfiguration();
+        if (photoName == null || photoName.isBlank() || !photoName.startsWith("places/")) {
+            throw new IllegalArgumentException("Nome de foto do Google Places inválido.");
+        }
+        try {
+            return client()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1/" + photoName + "/media")
+                            .queryParam("maxWidthPx", maxWidthPx == null ? 900 : Math.max(320, Math.min(maxWidthPx, 1600)))
+                            .queryParam("key", properties.getApiKey())
+                            .build())
+                    .retrieve()
+                    .body(byte[].class);
+        } catch (RestClientResponseException exception) {
+            throw ExternalApiClientSupport.translate(PROVIDER, exception);
+        } catch (RestClientException exception) {
+            throw ExternalApiClientSupport.translate(PROVIDER, exception);
+        }
     }
 
     public JsonNode autocomplete(String input, String sessionToken) {

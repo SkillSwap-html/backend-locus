@@ -114,6 +114,16 @@ public class IntegracoesController {
         return placesClient.details(placeId);
     }
 
+    @GetMapping("/google/places/photo")
+    public ResponseEntity<byte[]> fotoLugar(
+            @RequestParam @NotBlank String name,
+            @RequestParam(required = false) Integer maxWidthPx) {
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(placesClient.photo(name, maxWidthPx));
+    }
+
     @PostMapping("/google/routes")
     public JsonNode calcularRota(
             @RequestBody Map<String, Object> request) {
