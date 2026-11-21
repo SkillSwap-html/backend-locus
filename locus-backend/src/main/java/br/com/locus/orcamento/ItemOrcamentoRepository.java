@@ -9,6 +9,8 @@ public interface ItemOrcamentoRepository
 
     List<ItemOrcamento> findByViagemId(Long viagemId);
 
+    List<ItemOrcamento> findByTipoOfertaIsNotNullAndOfertaIdIsNotNull();
+
     List<ItemOrcamento> findByViagemIdAndCategoria(
             Long viagemId,
             CategoriaOrcamento categoria

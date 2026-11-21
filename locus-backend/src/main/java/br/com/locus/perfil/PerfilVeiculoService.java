@@ -39,14 +39,6 @@ public class PerfilVeiculoService {
                 usuarioSolicitanteId
         );
 
-        if (perfilVeiculoRepository
-                .existsByPerfilViajanteId(perfilId)) {
-
-            throw new RuntimeException(
-                    "Este perfil já possui um veículo cadastrado."
-            );
-        }
-
         if (perfilVeiculo.getTipoVeiculo() == null
                 || perfilVeiculo.getTipoVeiculo().isBlank()) {
 
@@ -71,9 +63,15 @@ public class PerfilVeiculoService {
             );
         }
 
-        perfilVeiculo.setPerfilViajante(perfilViajante);
+        PerfilVeiculo perfilParaSalvar = perfilVeiculoRepository
+                .findByPerfilViajanteId(perfilId)
+                .orElseGet(PerfilVeiculo::new);
+        perfilParaSalvar.setPerfilViajante(perfilViajante);
+        perfilParaSalvar.setTipoVeiculo(perfilVeiculo.getTipoVeiculo());
+        perfilParaSalvar.setTipoCombustivel(perfilVeiculo.getTipoCombustivel());
+        perfilParaSalvar.setConsumoMedio(perfilVeiculo.getConsumoMedio());
 
-        return perfilVeiculoRepository.save(perfilVeiculo);
+        return perfilVeiculoRepository.save(perfilParaSalvar);
     }
 
     public Optional<PerfilVeiculo> buscarPorPerfil(

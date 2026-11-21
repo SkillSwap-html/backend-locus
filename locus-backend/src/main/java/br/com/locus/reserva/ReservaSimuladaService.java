@@ -95,12 +95,13 @@ public class ReservaSimuladaService {
 
         ReservaSimulada reserva = buscarPorId(reservaId);
 
-        if (reserva.getStatus()
-                != StatusReservaSimulada.RASCUNHO) {
-
-            throw new RuntimeException(
-                    "Somente reservas em rascunho podem avançar para o pagamento simulado."
-            );
+        if (reserva.getStatus() == StatusReservaSimulada.CANCELADA_EM_SIMULACAO) {
+            throw new RuntimeException("Esta simulação foi cancelada. Inicie uma nova simulação.");
+        }
+        // A etapa é retomável: recarregar a página ou clicar novamente não
+        // reinicia nem duplica a reserva já preparada.
+        if (reserva.getStatus() != StatusReservaSimulada.RASCUNHO) {
+            return reserva;
         }
 
         ResumoOrcamento resumoOrcamento =

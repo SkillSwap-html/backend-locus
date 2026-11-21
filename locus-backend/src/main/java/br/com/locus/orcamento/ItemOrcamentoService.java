@@ -85,6 +85,21 @@ public class ItemOrcamentoService {
                 );
             }
 
+            if (viagem.getTipoOrcamento() == br.com.locus.perfil.TipoOrcamento.FIXO
+                    && viagem.getValorOrcamentoTotal() != null) {
+                BigDecimal totalAtual = itemOrcamentoRepository
+                        .findByViagemId(viagemId)
+                        .stream()
+                        .map(ItemOrcamento::getValor)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                if (totalAtual.add(itemOrcamento.getValor())
+                        .compareTo(viagem.getValorOrcamentoTotal()) > 0) {
+                    throw new RuntimeException(
+                            "Este item ultrapassa o orçamento total disponível da viagem."
+                    );
+                }
+            }
+
             if (itemOrcamento.getTipoOferta() != null
                     && !itemOrcamento.getTipoOferta().isBlank()
                     && itemOrcamento.getOfertaId() == null) {

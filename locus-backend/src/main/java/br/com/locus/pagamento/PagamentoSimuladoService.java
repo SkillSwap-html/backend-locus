@@ -73,10 +73,7 @@ public class PagamentoSimuladoService {
 
             if (pagamentoExistente.getStatus()
                     == StatusPagamentoSimulado.CONCLUIDO) {
-
-                throw new RuntimeException(
-                        "O pagamento simulado já foi concluído."
-                );
+                return pagamentoExistente;
             }
 
             if (pagamentoExistente.getStatus()
@@ -255,9 +252,10 @@ public class PagamentoSimuladoService {
                             .getUsuario()
                             .getId();
 
-            if (pagamento.getStatus()
-                    != StatusPagamentoSimulado.INICIADO) {
-
+            if (pagamento.getStatus() == StatusPagamentoSimulado.INTERROMPIDO) {
+                return pagamento;
+            }
+            if (pagamento.getStatus() != StatusPagamentoSimulado.INICIADO) {
                 throw new RuntimeException(
                         "Somente pagamentos iniciados podem ser interrompidos."
                 );

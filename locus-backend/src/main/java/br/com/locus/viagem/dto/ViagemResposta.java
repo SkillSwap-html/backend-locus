@@ -7,6 +7,7 @@ import br.com.locus.viagem.ViabilidadeTransporteTerrestre;
 import br.com.locus.viagem.Viagem;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 public class ViagemResposta {
 
@@ -19,6 +20,7 @@ public class ViagemResposta {
     private ModoTransporte modoTransporte;
     private TipoOrcamento tipoOrcamento;
     private boolean mochilao;
+    private BigDecimal valorOrcamentoTotal;
     private ViabilidadeTransporteTerrestre viabilidadeTransporteTerrestre;
     private UsuarioResposta usuario;
 
@@ -32,6 +34,7 @@ public class ViagemResposta {
         this.modoTransporte = viagem.getModoTransporte();
         this.tipoOrcamento = viagem.getTipoOrcamento();
         this.mochilao = viagem.isMochilao();
+        this.valorOrcamentoTotal = viagem.getValorOrcamentoTotal();
 
         if (viagem.getViabilidadeTransporteTerrestre() == null) {
             this.viabilidadeTransporteTerrestre =
@@ -82,6 +85,10 @@ public class ViagemResposta {
 
     public boolean isMochilao() {
         return mochilao;
+    }
+
+    public BigDecimal getValorOrcamentoTotal() {
+        return valorOrcamentoTotal;
     }
 
     public ViabilidadeTransporteTerrestre getViabilidadeTransporteTerrestre() {

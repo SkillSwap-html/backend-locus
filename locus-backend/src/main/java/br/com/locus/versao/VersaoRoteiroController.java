@@ -76,4 +76,19 @@ public class VersaoRoteiroController {
                 usuarioSolicitanteId
         );
     }
+
+    @PostMapping("/{versaoId}/restaurar")
+    public VersaoRoteiroResposta restaurar(
+            @PathVariable Long versaoId,
+            @RequestParam Long viagemId,
+            @RequestParam Long usuarioSolicitanteId) {
+
+        return new VersaoRoteiroResposta(
+                versaoRoteiroService.restaurarVersao(
+                        viagemId,
+                        versaoId,
+                        usuarioSolicitanteId
+                )
+        );
+    }
 }

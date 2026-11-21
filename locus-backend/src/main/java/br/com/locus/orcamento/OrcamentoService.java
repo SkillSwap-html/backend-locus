@@ -48,16 +48,6 @@ public class OrcamentoService {
                 .orElseThrow(() ->
                         new RuntimeException("Viagem não encontrada."));
 
-        PerfilViajante perfilViajante = perfilViajanteRepository
-                .findByUsuarioId(viagem.getUsuario().getId())
-                .orElseThrow(() ->
-                        new RuntimeException("Perfil de viajante não encontrado."));
-
-        PreferenciaViagem preferenciaViagem = preferenciaViagemRepository
-                .findByPerfilViajanteId(perfilViajante.getId())
-                .orElseThrow(() ->
-                        new RuntimeException("Preferências de viagem não encontradas."));
-
         List<ItemOrcamento> itens =
                 itemOrcamentoRepository.findByViagemId(viagemId);
 
@@ -67,16 +57,34 @@ public class OrcamentoService {
 
         ResumoOrcamento resumo = new ResumoOrcamento();
 
-        resumo.setTipoOrcamento(
-                preferenciaViagem.getTipoOrcamento()
-        );
+        TipoOrcamento tipoOrcamento = viagem.getTipoOrcamento();
+        BigDecimal limiteTotalViagem = viagem.getValorOrcamentoTotal();
+        if (tipoOrcamento == null) tipoOrcamento = TipoOrcamento.ABERTO;
+
+        // Compatibilidade com viagens antigas criadas antes do limite ser
+        // salvo na própria viagem.
+        if (tipoOrcamento == TipoOrcamento.FIXO && limiteTotalViagem == null) {
+            PerfilViajante perfilViajante = perfilViajanteRepository
+                    .findByUsuarioId(viagem.getUsuario().getId())
+                    .orElse(null);
+            if (perfilViajante != null) {
+                limiteTotalViagem = preferenciaViagemRepository
+                        .findByPerfilViajanteId(perfilViajante.getId())
+                        .map(PreferenciaViagem::getValorOrcamento)
+                        .orElse(null);
+            }
+        }
+
+        resumo.setTipoOrcamento(tipoOrcamento);
 
         resumo.setTotalGasto(totalGasto);
 
-        if (preferenciaViagem.getTipoOrcamento() == TipoOrcamento.FIXO) {
+        if (tipoOrcamento == TipoOrcamento.FIXO) {
 
-            BigDecimal limiteTotal =
-                    preferenciaViagem.getValorOrcamento();
+            BigDecimal limiteTotal = limiteTotalViagem;
+            if (limiteTotal == null) {
+                throw new RuntimeException("A viagem com orçamento fixo não possui limite total cadastrado.");
+            }
 
             BigDecimal saldoTotal =
                     limiteTotal.subtract(totalGasto);

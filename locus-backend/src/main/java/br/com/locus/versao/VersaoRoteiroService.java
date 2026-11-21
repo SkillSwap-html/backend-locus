@@ -4,6 +4,8 @@ import br.com.locus.roteiro.DiaRoteiro;
 import br.com.locus.roteiro.DiaRoteiroRepository;
 import br.com.locus.roteiro.ItemRoteiro;
 import br.com.locus.roteiro.ItemRoteiroRepository;
+import br.com.locus.roteiro.DeslocamentoRoteiro;
+import br.com.locus.roteiro.DeslocamentoRoteiroRepository;
 import br.com.locus.viagem.Viagem;
 import br.com.locus.viagem.ViagemRepository;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ public class VersaoRoteiroService {
     private final ViagemRepository viagemRepository;
     private final DiaRoteiroRepository diaRoteiroRepository;
     private final ItemRoteiroRepository itemRoteiroRepository;
+    private final DeslocamentoRoteiroRepository deslocamentoRoteiroRepository;
     private final PermissaoCompartilhamentoService permissaoCompartilhamentoService;
 
     public VersaoRoteiroService(
@@ -30,6 +33,7 @@ public class VersaoRoteiroService {
             ViagemRepository viagemRepository,
             DiaRoteiroRepository diaRoteiroRepository,
             ItemRoteiroRepository itemRoteiroRepository,
+            DeslocamentoRoteiroRepository deslocamentoRoteiroRepository,
             PermissaoCompartilhamentoService permissaoCompartilhamentoService) {
 
         this.versaoRoteiroRepository = versaoRoteiroRepository;
@@ -37,6 +41,7 @@ public class VersaoRoteiroService {
         this.viagemRepository = viagemRepository;
         this.diaRoteiroRepository = diaRoteiroRepository;
         this.itemRoteiroRepository = itemRoteiroRepository;
+        this.deslocamentoRoteiroRepository = deslocamentoRoteiroRepository;
         this.permissaoCompartilhamentoService = permissaoCompartilhamentoService;
     }
 
@@ -373,6 +378,78 @@ public class VersaoRoteiroService {
                 versaoAntigaId,
                 versaoNovaId
         );
+    }
+
+    @Transactional
+    public VersaoRoteiro restaurarVersao(
+            Long viagemId,
+            Long versaoId,
+            Long usuarioSolicitanteId) {
+
+        permissaoCompartilhamentoService.validarEdicao(
+                viagemId,
+                usuarioSolicitanteId
+        );
+
+        VersaoRoteiro versao = versaoRoteiroRepository.findById(versaoId)
+                .orElseThrow(() -> new RuntimeException("Versão do roteiro não encontrada."));
+
+        if (!versao.getViagem().getId().equals(viagemId)) {
+            throw new RuntimeException("A versão não pertence à viagem informada.");
+        }
+
+        List<DiaRoteiro> dias = diaRoteiroRepository.findByViagemIdOrderByDataAsc(viagemId);
+        List<ItemVersaoRoteiro> itensSalvos = itemVersaoRoteiroRepository
+                .findByVersaoRoteiroIdOrderByDataDiaAscOrdemAsc(versaoId);
+
+        List<ItemRoteiro> itensAtuais = new ArrayList<>();
+        for (DiaRoteiro dia : dias) {
+            itensAtuais.addAll(itemRoteiroRepository.findByDiaRoteiroIdOrderByOrdemAsc(dia.getId()));
+        }
+        for (ItemRoteiro item : itensAtuais) {
+            List<DeslocamentoRoteiro> deslocamentos = deslocamentoRoteiroRepository
+                    .findByItemOrigemIdOrItemDestinoId(item.getId(), item.getId());
+            if (!deslocamentos.isEmpty()) {
+                deslocamentoRoteiroRepository.deleteAll(deslocamentos);
+            }
+        }
+        deslocamentoRoteiroRepository.flush();
+        itemRoteiroRepository.deleteAll(itensAtuais);
+        itemRoteiroRepository.flush();
+
+        for (ItemVersaoRoteiro itemSalvo : itensSalvos) {
+            DiaRoteiro dia = dias.stream()
+                    .filter(item -> item.getData().equals(itemSalvo.getDataDia()))
+                    .findFirst()
+                    .orElseGet(() -> criarDiaParaRestauracao(versao.getViagem(), itemSalvo.getDataDia(), dias));
+
+            ItemRoteiro item = new ItemRoteiro();
+            item.setDiaRoteiro(dia);
+            item.setTitulo(itemSalvo.getTitulo());
+            item.setHorarioInicio(itemSalvo.getHorarioInicio());
+            item.setDuracaoMinutos(itemSalvo.getDuracaoMinutos());
+            item.setOrdem(itemSalvo.getOrdem());
+            item.setCustoEstimado(itemSalvo.getCustoEstimado());
+            item.setObservacoes(itemSalvo.getObservacoes());
+            item.setMotivoRecomendacao(itemSalvo.getMotivoRecomendacao());
+            item.setFavorito(itemSalvo.getFavorito());
+            itemRoteiroRepository.save(item);
+        }
+
+        return versao;
+    }
+
+    private DiaRoteiro criarDiaParaRestauracao(
+            Viagem viagem,
+            java.time.LocalDate data,
+            List<DiaRoteiro> dias) {
+
+        DiaRoteiro dia = new DiaRoteiro();
+        dia.setViagem(viagem);
+        dia.setData(data);
+        DiaRoteiro salvo = diaRoteiroRepository.save(dia);
+        dias.add(salvo);
+        return salvo;
     }
 
     private Integer calcularProximoNumeroVersao(

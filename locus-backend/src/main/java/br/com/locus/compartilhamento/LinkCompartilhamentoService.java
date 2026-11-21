@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.locus.compartilhamento.dto.EstimativaRotaCompartilhadaResposta;
 import br.com.locus.transporte.EstimativaRota;
 import br.com.locus.transporte.EstimativaRotaRepository;
+import br.com.locus.admin.ControleAcessoService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class LinkCompartilhamentoService {
     private final ItemRoteiroRepository itemRoteiroRepository;
     private final OrcamentoService orcamentoService;
     private final EstimativaRotaRepository estimativaRotaRepository;
+    private final ControleAcessoService controleAcessoService;
 
     public LinkCompartilhamentoService(
             LinkCompartilhamentoRepository linkRepository,
@@ -37,7 +39,8 @@ public class LinkCompartilhamentoService {
             DiaRoteiroRepository diaRoteiroRepository,
             ItemRoteiroRepository itemRoteiroRepository,
             OrcamentoService orcamentoService,
-            EstimativaRotaRepository estimativaRotaRepository ) {
+            EstimativaRotaRepository estimativaRotaRepository,
+            ControleAcessoService controleAcessoService) {
 
         this.linkRepository = linkRepository;
         this.viagemRepository = viagemRepository;
@@ -45,6 +48,7 @@ public class LinkCompartilhamentoService {
         this.itemRoteiroRepository = itemRoteiroRepository;
         this.orcamentoService = orcamentoService;
         this.estimativaRotaRepository = estimativaRotaRepository;
+        this.controleAcessoService = controleAcessoService;
     }
 
     @Transactional
@@ -230,6 +234,8 @@ public class LinkCompartilhamentoService {
     private void validarProprietario(
             Viagem viagem,
             Long usuarioSolicitanteId) {
+
+        controleAcessoService.exigirSolicitanteAutenticado(usuarioSolicitanteId);
 
         if (!viagem.getUsuario()
                 .getId()

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 @Service
 public class ViagemService {
@@ -90,6 +91,17 @@ public class ViagemService {
 
         if (viagem.getTipoOrcamento() == null) {
             viagem.setTipoOrcamento(TipoOrcamento.ABERTO);
+        }
+
+        if (viagem.getTipoOrcamento() == TipoOrcamento.FIXO) {
+            if (viagem.getValorOrcamentoTotal() == null
+                    || viagem.getValorOrcamentoTotal().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException(
+                        "Para orçamento fixo, informe o valor total da viagem."
+                );
+            }
+        } else {
+            viagem.setValorOrcamentoTotal(null);
         }
 
         if (viagem.getOrigem()
@@ -221,5 +233,62 @@ public class ViagemService {
                                 ));
 
         return Optional.of(viagem);
+    }
+
+    public Viagem atualizar(
+            Long viagemId,
+            Long usuarioSolicitanteId,
+            Viagem dados) {
+
+        Viagem atual = controleAcessoService.exigirProprietarioViagem(
+                viagemId,
+                usuarioSolicitanteId
+        );
+
+        if (dados.getOrigem() != null && !dados.getOrigem().isBlank()) {
+            atual.setOrigem(dados.getOrigem().trim());
+        }
+        if (dados.getDestino() != null && !dados.getDestino().isBlank()) {
+            atual.setDestino(dados.getDestino().trim());
+        }
+        if (dados.getTitulo() != null && !dados.getTitulo().isBlank()) {
+            atual.setTitulo(dados.getTitulo().trim());
+        }
+        if (dados.getDataInicio() != null) atual.setDataInicio(dados.getDataInicio());
+        if (dados.getDataFim() != null) atual.setDataFim(dados.getDataFim());
+        if (dados.getModoTransporte() != null) atual.setModoTransporte(dados.getModoTransporte());
+        if (dados.getTipoOrcamento() != null) atual.setTipoOrcamento(dados.getTipoOrcamento());
+        if (dados.isMochilaoInformado()) {
+            atual.setMochilao(dados.isMochilao());
+        }
+        if (atual.getTipoOrcamento() == TipoOrcamento.FIXO) {
+            if (dados.getValorOrcamentoTotal() != null) {
+                atual.setValorOrcamentoTotal(dados.getValorOrcamentoTotal());
+            }
+            if (atual.getValorOrcamentoTotal() == null
+                    || atual.getValorOrcamentoTotal().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("Para orçamento fixo, informe o valor total da viagem.");
+            }
+        } else {
+            atual.setValorOrcamentoTotal(null);
+        }
+        if (atual.getDataInicio() != null && atual.getDataFim() != null
+                && atual.getDataFim().isBefore(atual.getDataInicio())) {
+            throw new RuntimeException("A data de fim não pode ser anterior à data de início.");
+        }
+        boolean existeConflito = atual.getDataInicio() != null && atual.getDataFim() != null
+                && viagemRepository
+                .findByUsuarioIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual(
+                        atual.getUsuario().getId(),
+                        atual.getDataFim(),
+                        atual.getDataInicio())
+                .stream()
+                .anyMatch(item -> !item.getId().equals(atual.getId()) && !atual.isMochilao());
+        if (existeConflito) {
+            throw new RuntimeException(
+                    "Já existe uma viagem no mesmo período. Marque como mochilão para organizar vários destinos na mesma janela."
+            );
+        }
+        return viagemRepository.save(atual);
     }
 }

@@ -16,7 +16,7 @@ Backend do Locus, plataforma de apoio ao planejamento de viagens. O projeto foi 
 - configuração de CORS por variável de ambiente;
 - autenticação por token Firebase quando a segurança estiver habilitada.
 - adaptadores para Places, Routes, Street View, Gemini e Groq;
-- adaptadores de voos e hotéis com catálogo simulado identificável para demonstração e opção de Amadeus real.
+- catálogo local de voos e hotéis simulados, identificado na interface e sem dependência de provedor comercial.
 
 ## Requisitos
 
@@ -60,7 +60,7 @@ As variáveis das integrações externas também estão no `.env.example`:
 - Gemini API: `GEMINI_API_KEY`, `GEMINI_MODEL` e limites de geração;
 - pesquisa web opcional do Gemini: `GEMINI_WEB_SEARCH_ENABLED`;
 - Groq como fallback do assistente: `GROQ_ENABLED`, `GROQ_API_KEY` e `GROQ_MODEL`;
-- ofertas de voos e hospedagens: `AMADEUS_MODE=mock` para demonstração ou `AMADEUS_MODE=real` com credenciais do provedor. A interface identifica ofertas simuladas.
+- ofertas de voos e hospedagens: o Locus usa um catálogo local demonstrativo, identificado na interface como simulado.
 
 Cada integração possui uma variável `*_ENABLED`, uma URL-base e um timeout. As integrações começam desligadas para que a aplicação local não dependa de credenciais. Depois de preencher as chaves, altere somente as integrações que serão usadas para `true`.
 
@@ -121,7 +121,7 @@ Quando `SECURITY_ENABLED=true`, as rotas protegidas exigem um Bearer Token emiti
 
 As roles podem ser informadas nos custom claims do token pelo campo `role`, como `ADMINISTRADOR` ou `RESPONSAVEL_TECNICO`. O claim booleano `admin=true` também concede a role de administrador.
 
-O cadastro inicial de usuário continua público para permitir a criação do perfil depois da autenticação no frontend. As demais rotas exigem autenticação.
+O frontend sincroniza o cadastro do usuário logo depois do login Firebase. Em produção, o endpoint de cadastro também exige o Bearer Token e só aceita o UID/e-mail presentes no token; não existe cadastro anônimo nem atualização de outra conta.
 
 ## Testes
 

@@ -4,6 +4,7 @@ import br.com.locus.usuario.dto.UsuarioResposta;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @PreAuthorize("@securityMode.permitOrHasAdmin(authentication)")
     public List<UsuarioResposta> listarTodos() {
 
         return usuarioService.listarTodos()
@@ -35,6 +37,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityMode.permitOrSameUser(authentication, #id)")
     public ResponseEntity<UsuarioResposta> buscarPorId(
             @PathVariable Long id) {
 

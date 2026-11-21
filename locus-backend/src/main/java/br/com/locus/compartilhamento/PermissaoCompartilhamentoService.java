@@ -12,6 +12,7 @@ import br.com.locus.notificacao.TipoNotificacao;
 import br.com.locus.notificacao.dto.NotificacaoRequest;
 import br.com.locus.auditoria.EventoAuditoriaService;
 import br.com.locus.auditoria.ResultadoAuditoria;
+import br.com.locus.admin.ControleAcessoService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,19 +25,22 @@ public class PermissaoCompartilhamentoService {
     private final UsuarioRepository usuarioRepository;
     private final NotificacaoService notificacaoService;
     private final EventoAuditoriaService eventoAuditoriaService;
+    private final ControleAcessoService controleAcessoService;
 
     public PermissaoCompartilhamentoService(
             PermissaoCompartilhamentoRepository permissaoRepository,
             ViagemRepository viagemRepository,
             UsuarioRepository usuarioRepository,
             NotificacaoService notificacaoService,
-            EventoAuditoriaService eventoAuditoriaService) {
+            EventoAuditoriaService eventoAuditoriaService,
+            ControleAcessoService controleAcessoService) {
 
         this.permissaoRepository = permissaoRepository;
         this.viagemRepository = viagemRepository;
         this.usuarioRepository = usuarioRepository;
         this.notificacaoService = notificacaoService;
         this.eventoAuditoriaService = eventoAuditoriaService;
+        this.controleAcessoService = controleAcessoService;
     }
 
     @Transactional
@@ -362,6 +366,8 @@ public class PermissaoCompartilhamentoService {
             Long viagemId,
             Long usuarioId) {
 
+        controleAcessoService.exigirSolicitanteAutenticado(usuarioId);
+
         Viagem viagem = buscarViagem(viagemId);
 
         if (viagem.getUsuario().getId().equals(usuarioId)) {
@@ -379,6 +385,8 @@ public class PermissaoCompartilhamentoService {
     public boolean podeEditar(
             Long viagemId,
             Long usuarioId) {
+
+        controleAcessoService.exigirSolicitanteAutenticado(usuarioId);
 
         Viagem viagem = buscarViagem(viagemId);
 
@@ -427,6 +435,8 @@ public class PermissaoCompartilhamentoService {
     public void validarProprietario(
             Long viagemId,
             Long usuarioId) {
+
+        controleAcessoService.exigirSolicitanteAutenticado(usuarioId);
 
         Viagem viagem = buscarViagem(viagemId);
 

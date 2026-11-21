@@ -11,14 +11,14 @@ Divisão das integrações previstas na ERS e do que o backend faz com cada uma.
 | Routes API | Distância, duração e rota entre pontos | `GOOGLE_ROUTES_*` | Adaptador REST disponível |
 | Gemini API | Conversa, sugestões e explicação das alternativas | `GEMINI_*` | Adaptador REST disponível |
 | Groq API | Fallback do assistente quando o Gemini estiver indisponível | `GROQ_*` | Adaptador REST disponível |
-| Ofertas de voos | Busca de ofertas de voo | `AMADEUS_MODE`, `AMADEUS_*` | Catálogo local simulado por padrão; Amadeus real opcional |
-| Preço de voo | Conferência de uma oferta de voo | `AMADEUS_MODE`, `AMADEUS_*` | Mesmo contrato da consulta de preço |
-| Lista de hotéis | Lista de hotéis por cidade | `AMADEUS_MODE`, `AMADEUS_*` | Catálogo local simulado por padrão; Amadeus real opcional |
-| Ofertas de hospedagem | Busca de ofertas de hospedagem | `AMADEUS_MODE`, `AMADEUS_*` | Mesmo contrato da consulta de ofertas |
+| Ofertas de voos | Busca de ofertas de voo | nenhuma | Catálogo local simulado do Locus |
+| Preço de voo | Conferência de uma oferta de voo | nenhuma | Retorna a oferta marcada como simulada |
+| Lista de hotéis | Lista de hotéis por cidade | nenhuma | Catálogo local simulado do Locus |
+| Ofertas de hospedagem | Busca de ofertas de hospedagem | nenhuma | Catálogo local com imagens demonstrativas |
 
 As rotas REST desses adaptadores estão documentadas em `docs/API.md`. Elas retornam a resposta do provedor para que os módulos de negócio possam normalizar, salvar, auditar e exibir os dados. As credenciais não ficam no código.
 
-As rotas de voos e hospedagem usam `AMADEUS_MODE=mock` para demonstração e identificam os resultados como simulados. Para consultar ofertas externas, use `AMADEUS_MODE=real` com as credenciais do provedor.
+As rotas de voos e hospedagem usam um catálogo local do Locus e identificam os resultados como simulados. Nenhuma chamada a provedor comercial é feita por essas rotas.
 
 Quando `GEMINI_WEB_SEARCH_ENABLED=true`, o Gemini pode consultar a busca do Google para apoiar respostas atuais. Essas respostas continuam sendo recomendações sujeitas a conferência: o Locus não transforma pesquisa na web em disponibilidade garantida, reserva real ou preço vinculante. Se o Gemini falhar, o endpoint do assistente tenta o Groq configurado em `GROQ_*`.
 
@@ -32,4 +32,4 @@ A reserva, o pagamento e a confirmação continuam locais e simulados. Nenhum ad
 4. Manter as chaves restritas por aplicação, domínio, quota e ambiente no painel do provedor.
 5. Fazer uma chamada de teste e verifique a resposta antes de considerar a integração validada.
 
-No ambiente local, o modo `mock` permite testar o fluxo de ofertas sem uma conta Amadeus. As respostas simuladas devem aparecer na interface como simulação e não representam disponibilidade ou preço reservável.
+As respostas simuladas devem aparecer na interface como simulação e não representam disponibilidade ou preço reservável.

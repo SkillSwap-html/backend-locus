@@ -3,6 +3,10 @@ package br.com.locus.usuario;
 import br.com.locus.admin.AdminEmailRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import br.com.locus.exception.AcessoNegadoException;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +41,8 @@ public class UsuarioService {
             throw new RuntimeException("O firebaseUid é obrigatório.");
         }
 
+        validarIdentidadeDoToken(usuario);
+
         if (usuario.getEmail().equalsIgnoreCase(adminInitialEmail)
                 && adminInitialEmail.contains("@")) {
             adminEmailRepository.findByEmailIgnoreCase(adminInitialEmail)
@@ -48,7 +54,9 @@ public class UsuarioService {
         Usuario existente = usuarioRepository.findByFirebaseUid(usuario.getFirebaseUid()).orElse(null);
         Usuario porEmail = usuarioRepository.findByEmailIgnoreCase(usuario.getEmail()).orElse(null);
         if (existente == null && porEmail != null) {
-            existente = porEmail;
+            throw new AcessoNegadoException(
+                    "Este e-mail já está vinculado a outra conta. Entre com a conta correta."
+            );
         }
         if (existente != null) {
             existente.setFirebaseUid(usuario.getFirebaseUid());
@@ -67,6 +75,26 @@ public class UsuarioService {
                         : TipoUsuario.VIAJANTE
         );
         return usuarioRepository.save(usuario);
+    }
+
+    private void validarIdentidadeDoToken(Usuario usuario) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return;
+        }
+
+        String tokenUid = jwt.getClaimAsString("user_id");
+        if (tokenUid == null || tokenUid.isBlank()) tokenUid = jwt.getSubject();
+        String tokenEmail = jwt.getClaimAsString("email");
+
+        if (tokenUid != null && !tokenUid.isBlank()
+                && !tokenUid.equals(usuario.getFirebaseUid())) {
+            throw new AcessoNegadoException("O UID informado não corresponde à sessão atual.");
+        }
+        if (tokenEmail != null && !tokenEmail.isBlank()
+                && !tokenEmail.equalsIgnoreCase(usuario.getEmail())) {
+            throw new AcessoNegadoException("O e-mail informado não corresponde à sessão atual.");
+        }
     }
 
     private boolean ehAdministrador(String email) {

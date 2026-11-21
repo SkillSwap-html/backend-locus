@@ -58,4 +58,15 @@ public class ViagemController {
                         new ViagemResposta(viagem)))
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/{id}")
+    public ViagemResposta atualizar(
+            @PathVariable Long id,
+            @RequestParam Long usuarioSolicitanteId,
+            @RequestBody Viagem viagem) {
+
+        return new ViagemResposta(
+                viagemService.atualizar(id, usuarioSolicitanteId, viagem)
+        );
+    }
 }

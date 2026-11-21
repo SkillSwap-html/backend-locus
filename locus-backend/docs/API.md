@@ -98,10 +98,10 @@ As rotas abaixo são adaptadores do backend para os serviços definidos na ERS. 
 | GET | `/api/integracoes/google/places/{placeId}` | Google Places API |
 | POST | `/api/integracoes/google/routes` | Google Routes API |
 | GET | `/api/integracoes/google/street-view/metadata` | Google Street View API |
-| GET | `/api/integracoes/amadeus/voos` | Amadeus Flight Offers Search |
-| POST | `/api/integracoes/amadeus/voos/preco` | Amadeus Flight Offers Price |
-| GET | `/api/integracoes/amadeus/hoteis` | Amadeus Hotel List |
-| GET | `/api/integracoes/amadeus/hoteis/ofertas` | Amadeus Hotel Search |
+| GET | `/api/integracoes/ofertas/voos` | Catálogo simulado de voos do Locus |
+| POST | `/api/integracoes/ofertas/voos/preco` | Conferência de oferta simulada |
+| GET | `/api/integracoes/ofertas/hoteis` | Catálogo simulado de hotéis do Locus |
+| GET | `/api/integracoes/ofertas/hoteis/ofertas` | Ofertas simuladas de hospedagem |
 
 Exemplo de corpo para o Gemini:
 
@@ -120,7 +120,7 @@ Exemplo de corpo para o Places Text Search:
 }
 ```
 
-O endpoint de Routes recebe o corpo oficial da Routes API. O endpoint de Amadeus para preço recebe uma oferta retornada pelo Flight Offers Search. As reservas e pagamentos continuam sendo simulados dentro do Locus.
+O endpoint de Routes recebe o corpo oficial da Routes API. As ofertas, reservas e pagamentos continuam sendo simulados dentro do Locus.
 
 ## Observação
 

@@ -1,9 +1,9 @@
 package br.com.locus.integracao;
 
-import br.com.locus.integracao.amadeus.AmadeusClient;
 import br.com.locus.integracao.google.GooglePlacesClient;
 import br.com.locus.integracao.google.GoogleRoutesClient;
 import br.com.locus.integracao.google.GoogleStreetViewClient;
+import br.com.locus.integracao.ofertas.OfertasSimuladasClient;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -27,20 +27,20 @@ public class IntegracoesController {
     private final GooglePlacesClient placesClient;
     private final GoogleRoutesClient routesClient;
     private final GoogleStreetViewClient streetViewClient;
-    private final AmadeusClient amadeusClient;
+    private final OfertasSimuladasClient ofertasSimuladasClient;
 
     public IntegracoesController(
             AssistenteViagemClient assistenteViagemClient,
             GooglePlacesClient placesClient,
             GoogleRoutesClient routesClient,
             GoogleStreetViewClient streetViewClient,
-            AmadeusClient amadeusClient) {
+            OfertasSimuladasClient ofertasSimuladasClient) {
 
         this.assistenteViagemClient = assistenteViagemClient;
         this.placesClient = placesClient;
         this.routesClient = routesClient;
         this.streetViewClient = streetViewClient;
-        this.amadeusClient = amadeusClient;
+        this.ofertasSimuladasClient = ofertasSimuladasClient;
     }
 
     @PostMapping("/gemini/conteudo")
@@ -122,7 +122,7 @@ public class IntegracoesController {
         return streetViewClient.metadata(location, radius);
     }
 
-    @GetMapping({"/ofertas/voos", "/amadeus/voos"})
+    @GetMapping("/ofertas/voos")
     public JsonNode buscarVoos(
             @RequestParam String originLocationCode,
             @RequestParam String destinationLocationCode,
@@ -141,25 +141,25 @@ public class IntegracoesController {
         filters.put("currencyCode", currencyCode);
         filters.put("max", max == null ? null : String.valueOf(max));
 
-        return amadeusClient.searchFlightOffers(filters);
+        return ofertasSimuladasClient.buscarVoos(filters);
     }
 
-    @GetMapping({"/ofertas/localizacoes", "/amadeus/localizacoes"})
+    @GetMapping("/ofertas/localizacoes")
     public JsonNode buscarLocalizacoes(@RequestParam @NotBlank String keyword) {
-        return amadeusClient.searchLocations(keyword);
+        return ofertasSimuladasClient.buscarLocalizacoes(keyword);
     }
 
-    @PostMapping({"/ofertas/voos/preco", "/amadeus/voos/preco"})
+    @PostMapping("/ofertas/voos/preco")
     public JsonNode precificarVoo(@RequestBody JsonNode flightOffer) {
-        return amadeusClient.priceFlightOffer(flightOffer);
+        return ofertasSimuladasClient.precificarVoo(flightOffer);
     }
 
-    @GetMapping({"/ofertas/hoteis", "/amadeus/hoteis"})
+    @GetMapping("/ofertas/hoteis")
     public JsonNode listarHoteis(@RequestParam @NotBlank String cityCode) {
-        return amadeusClient.listHotels(cityCode);
+        return ofertasSimuladasClient.listarHoteis(cityCode);
     }
 
-    @GetMapping({"/ofertas/hoteis/ofertas", "/amadeus/hoteis/ofertas"})
+    @GetMapping("/ofertas/hoteis/ofertas")
     public JsonNode buscarOfertasDeHotel(
             @RequestParam String hotelIds,
             @RequestParam String adults,
@@ -176,7 +176,7 @@ public class IntegracoesController {
         filters.put("roomQuantity", roomQuantity);
         filters.put("currency", currency);
 
-        return amadeusClient.searchHotels(filters);
+        return ofertasSimuladasClient.buscarOfertasHotel(filters);
     }
 
     public record GeminiRequest(

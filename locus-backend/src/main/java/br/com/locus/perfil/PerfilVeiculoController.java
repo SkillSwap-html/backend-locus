@@ -16,7 +16,7 @@ public class PerfilVeiculoController {
         this.perfilVeiculoService = perfilVeiculoService;
     }
 
-    @PostMapping("/perfil/{perfilId}")
+    @RequestMapping(value = "/perfil/{perfilId}", method = {RequestMethod.POST, RequestMethod.PUT})
     public PerfilVeiculoResposta cadastrar(
             @PathVariable Long perfilId,
             @RequestParam Long usuarioSolicitanteId,

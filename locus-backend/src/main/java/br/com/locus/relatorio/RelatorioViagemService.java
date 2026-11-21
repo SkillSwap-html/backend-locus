@@ -103,10 +103,11 @@ public class RelatorioViagemService {
 
             if (relatorioViagemRepository
                     .existsByReservaSimuladaId(reservaId)) {
-
-                throw new RuntimeException(
-                        "Já existe um relatório para esta reserva simulada."
-                );
+                return relatorioViagemRepository
+                        .findByReservaSimuladaId(reservaId)
+                        .orElseThrow(() -> new RuntimeException(
+                                "Relatório existente não pôde ser recuperado."
+                        ));
             }
 
             byte[] pdf = gerarPdf(reserva);
