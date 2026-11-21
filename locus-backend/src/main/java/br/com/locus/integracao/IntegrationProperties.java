@@ -263,7 +263,7 @@ public class IntegrationProperties {
     public static class Amadeus {
 
         private boolean enabled;
-        private String mode = "mock";
+        private String mode = "disabled";
         private String baseUrl = "https://test.api.amadeus.com";
         private String clientId = "";
         private String clientSecret = "";

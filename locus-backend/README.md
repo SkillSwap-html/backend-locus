@@ -59,7 +59,7 @@ As variáveis das integrações externas também estão no `.env.example`:
 - Gemini API: `GEMINI_API_KEY`, `GEMINI_MODEL` e limites de geração;
 - pesquisa web opcional do Gemini: `GEMINI_WEB_SEARCH_ENABLED`;
 - Groq como fallback do assistente: `GROQ_ENABLED`, `GROQ_API_KEY` e `GROQ_MODEL`;
-- catálogo simulado do Locus: `AMADEUS_MODE=mock` (padrão, sem chave externa).
+- ofertas de voos e hospedagens: `AMADEUS_MODE=real` com credenciais do provedor; sem credenciais, mantenha `AMADEUS_MODE=disabled`.
 
 Cada integração possui uma variável `*_ENABLED`, uma URL-base e um timeout. As integrações começam desligadas para que a aplicação local não dependa de credenciais. Depois de preencher as chaves, altere somente as integrações que serão usadas para `true`.
 

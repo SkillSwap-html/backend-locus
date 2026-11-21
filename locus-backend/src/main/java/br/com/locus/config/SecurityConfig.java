@@ -13,6 +13,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.validator.JwtClaimValidator;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
@@ -71,15 +74,22 @@ public class SecurityConfig {
         }
 
         String issuer = "https://securetoken.google.com/" + projectId;
-        String googleCertificateUrl =
-                "https://www.googleapis.com/robot/v1/metadata/x509/"
+        String googleJwksUrl =
+                "https://www.googleapis.com/service_accounts/v1/jwk/"
                         + "securetoken@system.gserviceaccount.com";
 
         NimbusJwtDecoder decoder =
-                NimbusJwtDecoder.withJwkSetUri(googleCertificateUrl).build();
+                NimbusJwtDecoder.withJwkSetUri(googleJwksUrl).build();
 
+        OAuth2TokenValidator<Jwt> issuerValidator =
+                JwtValidators.createDefaultWithIssuer(issuer);
+        OAuth2TokenValidator<Jwt> audienceValidator =
+                new JwtClaimValidator<List<String>>(
+                        "aud",
+                        audience -> audience != null && audience.contains(projectId)
+                );
         decoder.setJwtValidator(
-                JwtValidators.createDefaultWithIssuer(issuer)
+                new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator)
         );
 
         return decoder;
