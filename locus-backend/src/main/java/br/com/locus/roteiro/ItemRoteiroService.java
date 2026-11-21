@@ -302,7 +302,7 @@ public class ItemRoteiroService {
             if (!itemExistente.getVersao()
                     .equals(itemRequest.getVersaoEsperada())) {
 
-                throw new ConflitoEdicaoException (
+                throw new ConflitoEdicaoException(
                         "Conflito de edição: um dos itens do roteiro foi alterado por outro usuário. Atualize os dados antes de reordenar novamente."
                 );
             }
@@ -527,30 +527,35 @@ public class ItemRoteiroService {
                 continue;
             }
 
-            LocalTime inicioExistente =
-                    itemExistente.getHorarioInicio();
+            int inicioExistente =
+                    itemExistente.getHorarioInicio().toSecondOfDay() / 60;
 
-            LocalTime fimExistente =
-                    inicioExistente.plusMinutes(
-                            itemExistente.getDuracaoMinutos()
-                    );
+            int fimExistente =
+                    inicioExistente + itemExistente.getDuracaoMinutos();
 
-            LocalTime novoInicio =
-                    itemRoteiro.getHorarioInicio();
+            int novoInicio =
+                    itemRoteiro.getHorarioInicio().toSecondOfDay() / 60;
 
-            LocalTime novoFim =
-                    novoInicio.plusMinutes(
-                            itemRoteiro.getDuracaoMinutos()
-                    );
+            int novoFim =
+                    novoInicio + itemRoteiro.getDuracaoMinutos();
 
             boolean existeConflito =
-                    novoInicio.isBefore(fimExistente)
-                            && novoFim.isAfter(inicioExistente);
+                    novoInicio < fimExistente
+                            && novoFim > inicioExistente;
 
             if (existeConflito) {
 
+                LocalTime fimFormatado =
+                        itemExistente.getHorarioInicio()
+                                .plusMinutes(itemExistente.getDuracaoMinutos());
+
                 throw new RuntimeException(
-                        "A atividade possui conflito de horário com outro item do roteiro."
+                        String.format(
+                                "A atividade possui conflito de horário com '%s' (%s às %s).",
+                                itemExistente.getTitulo(),
+                                itemExistente.getHorarioInicio(),
+                                fimFormatado
+                        )
                 );
             }
         }
