@@ -1,6 +1,7 @@
 package br.com.locus.exception;
 
 import br.com.locus.integracao.ExternalApiException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -48,11 +49,33 @@ public class TratadorGlobalException {
 
         Map<String, Object> resposta = new HashMap<>();
 
+        if (mensagemTecnica(exception.getMessage())) {
+            resposta.put("status", 500);
+            resposta.put("mensagem", "Não foi possível carregar seus dados agora. Tente novamente em instantes.");
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(resposta);
+        }
+
         resposta.put("status", 400);
         resposta.put("mensagem", exception.getMessage());
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(resposta);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<Map<String, Object>> tratarFalhaDePersistencia(
+            DataAccessException exception) {
+
+        Map<String, Object> resposta = new HashMap<>();
+        resposta.put("status", 500);
+        resposta.put("mensagem", "Não foi possível carregar seus dados agora. Tente novamente em instantes.");
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(resposta);
     }
 
@@ -110,5 +133,20 @@ public class TratadorGlobalException {
         return ResponseEntity
                 .status(exception.getStatus())
                 .body(resposta);
+    }
+
+    private boolean mensagemTecnica(String mensagem) {
+        if (mensagem == null || mensagem.isBlank()) {
+            return false;
+        }
+
+        String normalizada = mensagem.toLowerCase(java.util.Locale.ROOT);
+        return normalizada.contains("jdbc")
+                || normalizada.contains("hibernate")
+                || normalizada.contains("sql")
+                || normalizada.contains("column ")
+                || normalizada.contains("relation ")
+                || normalizada.contains("could not execute")
+                || normalizada.contains("constraint ");
     }
 }
