@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: locus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: locus_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-locus-dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - locus-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d locus_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: locus-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - locus-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  locus-postgres-data:
+  locus-redis-data:

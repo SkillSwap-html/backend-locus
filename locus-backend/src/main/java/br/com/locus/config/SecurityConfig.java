@@ -1,0 +1,114 @@
+package br.com.locus.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+@Configuration
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    private final boolean securityEnabled;
+
+    public SecurityConfig(
+            @Value("${app.security.enabled:false}") boolean securityEnabled) {
+
+        this.securityEnabled = securityEnabled;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
+
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults());
+
+        if (!securityEnabled) {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            return http.build();
+        }
+
+        http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health", "/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                );
+
+        return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.security.enabled", havingValue = "true")
+    public JwtDecoder jwtDecoder(
+            @Value("${app.firebase.project-id}") String projectId) {
+
+        if (projectId == null || projectId.isBlank()) {
+            throw new IllegalStateException(
+                    "FIREBASE_PROJECT_ID deve ser informado quando SECURITY_ENABLED=true."
+            );
+        }
+
+        String issuer = "https://securetoken.google.com/" + projectId;
+        String googleCertificateUrl =
+                "https://www.googleapis.com/robot/v1/metadata/x509/"
+                        + "securetoken@system.gserviceaccount.com";
+
+        NimbusJwtDecoder decoder =
+                NimbusJwtDecoder.withJwkSetUri(googleCertificateUrl).build();
+
+        decoder.setJwtValidator(
+                JwtValidators.createDefaultWithIssuer(issuer)
+        );
+
+        return decoder;
+    }
+
+    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setPrincipalClaimName("user_id");
+        converter.setJwtGrantedAuthoritiesConverter(this::authoritiesFromClaims);
+        return converter;
+    }
+
+    private Collection<GrantedAuthority> authoritiesFromClaims(Jwt jwt) {
+
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        String role = jwt.getClaimAsString("role");
+
+        if (role != null && !role.isBlank()) {
+            authorities.add(new SimpleGrantedAuthority(
+                    "ROLE_" + role.toUpperCase()
+            ));
+        }
+
+        Boolean admin = jwt.getClaim("admin");
+        if (Boolean.TRUE.equals(admin)) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"));
+        }
+
+        return authorities;
+    }
+}

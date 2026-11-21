@@ -1,0 +1,7 @@
+.git
+.mvn
+src
+target
+.env
+README.md
+docs
