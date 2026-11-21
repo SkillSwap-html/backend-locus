@@ -4,14 +4,14 @@ FROM eclipse-temurin:21-jdk AS build
 # Define o diretório de trabalho
 WORKDIR /app
 
-# Copia o Maven Wrapper e o pom.xml a partir de locus-backend, depois baixa as dependências
-COPY locus-backend/mvnw .
-COPY locus-backend/.mvn ./.mvn
-COPY locus-backend/pom.xml .
+# Copia o Maven Wrapper e o pom.xml, depois baixa as dependências
+COPY mvnw .
+COPY .mvn ./.mvn
+COPY pom.xml .
 RUN chmod +x mvnw && ./mvnw dependency:go-offline
 
 # Copia o resto do código fonte e compila, pulando os testes
-COPY locus-backend/src ./src
+COPY src ./src
 RUN ./mvnw clean package -DskipTests -Powasp-skip
 
 
