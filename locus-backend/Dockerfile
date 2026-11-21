@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Copia o pom.xml e baixa as dependências
-COPY pom.xml .
+COPY locus-backend/pom.xml .
 RUN mvn dependency:go-offline
 
 # Copia o resto do código fonte e compila, pulando os testes
-COPY src ./src
+COPY locus-backend/src ./src
 RUN mvn clean package -DskipTests -Powasp-skip
 
 
