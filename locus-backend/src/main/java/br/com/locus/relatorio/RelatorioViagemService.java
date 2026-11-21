@@ -14,6 +14,7 @@ import br.com.locus.roteiro.ItemRoteiro;
 import br.com.locus.roteiro.ItemRoteiroRepository;
 import br.com.locus.transporte.EstimativaRota;
 import br.com.locus.transporte.EstimativaRotaRepository;
+import br.com.locus.viagem.Viagem;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -32,9 +33,12 @@ import br.com.locus.auditoria.ResultadoAuditoria;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import br.com.locus.admin.ControleAcessoService;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class RelatorioViagemService {
@@ -103,11 +107,17 @@ public class RelatorioViagemService {
 
             if (relatorioViagemRepository
                     .existsByReservaSimuladaId(reservaId)) {
-                return relatorioViagemRepository
+                RelatorioViagem existente = relatorioViagemRepository
                         .findByReservaSimuladaId(reservaId)
                         .orElseThrow(() -> new RuntimeException(
                                 "Relatório existente não pôde ser recuperado."
                         ));
+                String nomeArquivo = nomeArquivoRoteiro(reserva.getViagem());
+                if (!nomeArquivo.equals(existente.getNomeArquivo())) {
+                    existente.setNomeArquivo(nomeArquivo);
+                    return relatorioViagemRepository.save(existente);
+                }
+                return existente;
             }
 
             byte[] pdf = gerarPdf(reserva);
@@ -118,7 +128,7 @@ public class RelatorioViagemService {
             relatorio.setReservaSimulada(reserva);
 
             relatorio.setNomeArquivo(
-                    "relatorio-" + reserva.getProtocolo() + ".pdf"
+                    nomeArquivoRoteiro(reserva.getViagem())
             );
 
             relatorio.setArquivoPdf(pdf);
@@ -339,7 +349,7 @@ public class RelatorioViagemService {
             float x = 50;
             float y = 735;
 
-            desenharLogo(conteudo, x, 785, fonteNormal, fonteNegrito);
+            desenharLogo(conteudo, x, 755, fonteNormal, fonteNegrito);
 
             escreverTexto(
                     conteudo,
@@ -479,71 +489,73 @@ public class RelatorioViagemService {
                     y
             );
 
-            y -= 25;
+            y -= 18;
 
-            escreverLinha(
+            desenharCartao(
+                    conteudo,
+                    x,
+                    y - 58,
+                    512,
+                    58,
+                    new PDColor(new float[]{0.97f, 0.95f, 0.91f}, PDDeviceRGB.INSTANCE)
+            );
+            escreverTexto(conteudo, fonteNegrito, 9, "TOTAL ACUMULADO", x + 14, y - 18);
+            escreverTexto(
                     conteudo,
                     fonteNegrito,
-                    "Tipo:",
-                    resumoOrcamento
-                            .getTipoOrcamento()
-                            .toString(),
-                    x,
-                    y
+                    18,
+                    formatarDinheiro(resumoOrcamento.getTotalGasto()),
+                    x + 14,
+                    y - 41
             );
-
-            y -= 20;
-
-            escreverLinha(
+            escreverTexto(
                     conteudo,
-                    fonteNegrito,
-                    "Total:",
-                    formatarDinheiro(
-                            resumoOrcamento.getTotalGasto()
-                    ),
-                    x,
-                    y
+                    fonteNormal,
+                    8,
+                    resumoOrcamento.getLimiteTotal() == null
+                            ? "Orcamento aberto"
+                            : "Limite total: " + formatarDinheiro(resumoOrcamento.getLimiteTotal()),
+                    x + 355,
+                    y - 39
             );
 
-            y -= 25;
+            y -= 76;
 
-            for (ResumoCategoriaOrcamento categoria :
-                    resumoOrcamento.getCategorias()) {
+            float larguraCartao = 160;
+            float alturaCartao = 58;
+            float espacoCartao = 16;
+            List<ResumoCategoriaOrcamento> categorias = resumoOrcamento.getCategorias();
 
-                if (categoria.getSubtotal()
-                        .compareTo(BigDecimal.ZERO) > 0
-                        || categoria.getLimite() != null) {
+            for (int indice = 0; indice < categorias.size(); indice++) {
+                ResumoCategoriaOrcamento categoria = categorias.get(indice);
+                int linha = indice / 3;
+                int coluna = indice % 3;
+                float cartaoX = x + coluna * (larguraCartao + espacoCartao);
+                float cartaoY = y - (linha + 1) * alturaCartao - linha * 10;
 
-                    String textoCategoria =
-                            categoria.getCategoria()
-                                    + ": "
-                                    + formatarDinheiro(
-                                    categoria.getSubtotal()
-                            );
-
-                    if (categoria.getLimite() != null) {
-
-                        textoCategoria +=
-                                " | Limite: "
-                                        + formatarDinheiro(
-                                        categoria.getLimite()
-                                );
-                    }
-
-                    escreverTexto(
-                            conteudo,
-                            fonteNormal,
-                            10,
-                            textoCategoria,
-                            x + 15,
-                            y
-                    );
-
-                    y -= 18;
-                }
+                desenharCartao(
+                        conteudo,
+                        cartaoX,
+                        cartaoY,
+                        larguraCartao,
+                        alturaCartao,
+                        new PDColor(new float[]{0.995f, 0.99f, 0.96f}, PDDeviceRGB.INSTANCE)
+                );
+                escreverTexto(conteudo, fonteNegrito, 9, rotuloCategoria(categoria), cartaoX + 10, cartaoY + 40);
+                escreverTexto(conteudo, fonteNegrito, 12, formatarDinheiro(categoria.getSubtotal()), cartaoX + 10, cartaoY + 23);
+                escreverTexto(
+                        conteudo,
+                        fonteNormal,
+                        7,
+                        categoria.getLimite() == null
+                                ? "Sem limite definido"
+                                : "Limite " + formatarDinheiro(categoria.getLimite()),
+                        cartaoX + 10,
+                        cartaoY + 9
+                );
             }
 
-            y -= 10;
+            y -= 144;
 
             escreverTexto(
                     conteudo,
@@ -741,7 +753,7 @@ public class RelatorioViagemService {
                                  pagina
                          )) {
 
-                desenharLogo(conteudo, 50, 785, fonteNormal, fonteNegrito);
+                desenharLogo(conteudo, 50, 755, fonteNormal, fonteNegrito);
 
                 escreverTexto(
                         conteudo,
@@ -779,7 +791,7 @@ public class RelatorioViagemService {
                 float x = 50;
                 float y = 735;
 
-                desenharLogo(conteudo, x, 785, fonteNormal, fonteNegrito);
+                desenharLogo(conteudo, x, 755, fonteNormal, fonteNegrito);
 
                 escreverTexto(
                         conteudo,
@@ -1021,6 +1033,62 @@ public class RelatorioViagemService {
         );
     }
 
+    private void desenharCartao(
+            PDPageContentStream conteudo,
+            float x,
+            float y,
+            float largura,
+            float altura,
+            PDColor fundo) throws IOException {
+
+        conteudo.setNonStrokingColor(fundo);
+        conteudo.addRect(x, y, largura, altura);
+        conteudo.fill();
+
+        conteudo.setStrokingColor(
+                new PDColor(new float[]{0.88f, 0.85f, 0.79f}, PDDeviceRGB.INSTANCE)
+        );
+        conteudo.setLineWidth(0.7f);
+        conteudo.addRect(x, y, largura, altura);
+        conteudo.stroke();
+
+        conteudo.setNonStrokingColor(
+                new PDColor(new float[]{0.08f, 0.23f, 0.24f}, PDDeviceRGB.INSTANCE)
+        );
+    }
+
+    private String rotuloCategoria(ResumoCategoriaOrcamento categoria) {
+
+        return switch (categoria.getCategoria()) {
+            case PASSAGEM -> "Passagem";
+            case HOSPEDAGEM -> "Hospedagem";
+            case VISITAS -> "Visitas";
+            case ALIMENTACAO -> "Alimentacao";
+            case TRANSPORTE_LOCAL -> "Transporte local";
+            case EXTRAS -> "Extras";
+        };
+    }
+
+    private String nomeArquivoRoteiro(Viagem viagem) {
+
+        String titulo = viagem.getTitulo();
+        if (titulo == null || titulo.isBlank()) {
+            titulo = "Roteiro para " + viagem.getDestino();
+        }
+
+        String slug = Normalizer.normalize(titulo, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replaceAll("[^A-Za-z0-9]+", "-")
+                .replaceAll("^-+|-+$", "")
+                .toLowerCase(Locale.ROOT);
+
+        if (slug.isBlank()) {
+            slug = "locus";
+        }
+
+        return "roteiro-" + slug + ".pdf";
+    }
+
     private String normalizarPdf(String texto) {
         if (texto == null) {
             return "";
@@ -1037,6 +1105,9 @@ public class RelatorioViagemService {
             return "Nao informado";
         }
 
-        return "R$ " + valor.setScale(2, java.math.RoundingMode.HALF_UP);
+        NumberFormat formato = NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+        formato.setMinimumFractionDigits(2);
+        formato.setMaximumFractionDigits(2);
+        return "R$ " + formato.format(valor);
     }
 }
