@@ -3,6 +3,7 @@ package br.com.locus.integracao.gemini;
 import br.com.locus.integracao.ExternalApiClientSupport;
 import br.com.locus.integracao.IntegrationProperties;
 import tools.jackson.databind.JsonNode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -52,6 +53,7 @@ public class GeminiClient {
                             .path("/v1beta/models/{model}:generateContent")
                             .queryParam("key", properties.getApiKey())
                             .build(properties.getModel()))
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
                     .body(JsonNode.class);

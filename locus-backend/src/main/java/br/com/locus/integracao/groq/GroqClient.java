@@ -3,6 +3,7 @@ package br.com.locus.integracao.groq;
 import br.com.locus.integracao.ExternalApiClientSupport;
 import br.com.locus.integracao.IntegrationProperties;
 import tools.jackson.databind.JsonNode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -44,6 +45,7 @@ public class GroqClient {
                     .post()
                     .uri("/openai/v1/chat/completions")
                     .header("Authorization", "Bearer " + properties.getApiKey())
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
                     .body(JsonNode.class);
