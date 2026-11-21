@@ -43,6 +43,7 @@ public class ItemRoteiroService {
                                 ));
 
         validarItemSemOrdem(itemRoteiro);
+        validarLimiteDoDia(diaRoteiroId);
 
         itemRoteiro.setDiaRoteiro(diaRoteiro);
 
@@ -180,6 +181,8 @@ public class ItemRoteiroService {
                         .getDiaRoteiro()
                         .getId();
 
+        validarLimiteDoDia(diaRoteiroId);
+
         ItemRoteiro novoItem =
                 new ItemRoteiro();
 
@@ -228,6 +231,17 @@ public class ItemRoteiroService {
         return itemRoteiroRepository.save(
                 novoItem
         );
+    }
+
+    private void validarLimiteDoDia(Long diaRoteiroId) {
+        int quantidade = itemRoteiroRepository
+                .findByDiaRoteiroIdOrderByOrdemAsc(diaRoteiroId)
+                .size();
+        if (quantidade >= 4) {
+            throw new RuntimeException(
+                    "Este dia já possui 4 atividades. Escolha o dia seguinte ou remova uma atividade."
+            );
+        }
     }
 
     @Transactional

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import tools.jackson.databind.JsonNode;
 
 import java.util.LinkedHashMap;
@@ -76,6 +78,9 @@ public class IntegracoesController {
                         + "Quando o orçamento for ABERTO, some os valores consultados e informe o acumulado após cada escolha. "
                         + "Para preços atuais de passagens e hospedagens, use a busca na web quando estiver disponível; informe fonte e data, "
                         + "e nunca apresente um valor web como garantia de compra. "
+                        + "Para ônibus, procure tarifas atuais na web quando houver busca disponível; se não encontrar, entregue apenas uma estimativa identificada como simulada. "
+                        + "Para carro, use a distância calculada pelo Routes, o modelo e o consumo informado nas preferências e procure o preço atual do combustível no país de origem; "
+                        + "calcule litros = distância total / km por litro e custo = litros x preço por litro, sempre mostrando a conta e marcando qualquer dado não encontrado como estimativa. "
                         + "Para cada sugestão de lugar, incentive a conferência no mapa e no Street View. "
                         + "O Locus só realiza reservas e pagamentos simulados, nunca compras reais.\n\n"
                         + request.prompt()
@@ -120,6 +125,18 @@ public class IntegracoesController {
             @RequestParam(required = false) Integer radius) {
 
         return streetViewClient.metadata(location, radius);
+    }
+
+    @GetMapping("/google/street-view/image")
+    public ResponseEntity<byte[]> imagemStreetView(
+            @RequestParam @NotBlank String location,
+            @RequestParam(required = false) Integer width,
+            @RequestParam(required = false) Integer height) {
+
+        byte[] imagem = streetViewClient.image(location, width, height);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(imagem);
     }
 
     @GetMapping("/ofertas/voos")

@@ -48,6 +48,31 @@ public class GoogleStreetViewClient {
         }
     }
 
+    public byte[] image(String location, Integer width, Integer height) {
+        ExternalApiClientSupport.requireEnabled(
+                PROVIDER,
+                properties.isEnabled(),
+                properties.getApiKey()
+        );
+
+        try {
+            return client()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/maps/api/streetview")
+                            .queryParam("size", (width == null ? 640 : width) + "x" + (height == null ? 360 : height))
+                            .queryParam("location", location)
+                            .queryParam("key", properties.getApiKey())
+                            .build())
+                    .retrieve()
+                    .body(byte[].class);
+        } catch (RestClientResponseException exception) {
+            throw ExternalApiClientSupport.translate(PROVIDER, exception);
+        } catch (RestClientException exception) {
+            throw ExternalApiClientSupport.translate(PROVIDER, exception);
+        }
+    }
+
     private RestClient client() {
         return ExternalApiClientSupport.client(
                 properties.getBaseUrl(),

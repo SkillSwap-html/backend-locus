@@ -68,6 +68,18 @@ public class ItemOrcamentoService {
                 );
             }
 
+            if ((itemOrcamento.getCategoria() == CategoriaOrcamento.PASSAGEM
+                    || itemOrcamento.getCategoria() == CategoriaOrcamento.HOSPEDAGEM)
+                    && itemOrcamentoRepository.existsByViagemIdAndCategoria(
+                    viagemId,
+                    itemOrcamento.getCategoria())) {
+                throw new RuntimeException(
+                        "Esta viagem já possui uma "
+                                + (itemOrcamento.getCategoria() == CategoriaOrcamento.PASSAGEM ? "passagem" : "hospedagem")
+                                + ". Remova a escolha anterior antes de adicionar outra."
+                );
+            }
+
             if (itemOrcamento.getDescricao() == null
                     || itemOrcamento.getDescricao().isBlank()) {
 
@@ -233,6 +245,23 @@ public class ItemOrcamentoService {
 
             throw e;
         }
+    }
+
+    @Transactional
+    public void excluir(Long itemId, Long usuarioSolicitanteId) {
+        ItemOrcamento item = itemOrcamentoRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item de orçamento não encontrado."));
+        Long viagemId = item.getViagem().getId();
+        controleAcessoService.exigirProprietarioViagem(viagemId, usuarioSolicitanteId);
+        itemOrcamentoRepository.delete(item);
+        eventoAuditoriaService.registrar(
+                usuarioSolicitanteId,
+                "REMOVER_ITEM_ORCAMENTO",
+                "ITEM_ORCAMENTO",
+                itemId,
+                ResultadoAuditoria.SUCESSO,
+                "Item removido da categoria " + item.getCategoria()
+        );
     }
 
     public ItemOrcamento adicionarEstimativaRota(

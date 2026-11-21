@@ -16,5 +16,7 @@ public interface ItemOrcamentoRepository
             CategoriaOrcamento categoria
     );
 
+    boolean existsByViagemIdAndCategoria(Long viagemId, CategoriaOrcamento categoria);
+
     boolean existsByEstimativaRotaId(Long estimativaRotaId);
 }

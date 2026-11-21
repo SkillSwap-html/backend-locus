@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Map;
 
@@ -38,12 +39,14 @@ public class OfertasSimuladasClient {
         String volta = filtros.get("returnDate");
         String moeda = valor(filtros, "currencyCode", "BRL");
         int limite = inteiro(filtros.get("max"), 3);
+        int adultos = inteiro(filtros.get("adults"), 1);
+        boolean idaEVolta = volta != null && !volta.isBlank();
 
         ObjectNode resposta = mapper.createObjectNode();
         resposta.putObject("meta").put("count", Math.min(limite, 3));
         ArrayNode ofertas = resposta.putArray("data");
         for (int i = 0; i < Math.min(limite, 3); i++) {
-            ofertas.add(ofertaVoo(origem, destino, ida, volta, moeda, i));
+            ofertas.add(ofertaVoo(origem, destino, ida, volta, moeda, adultos, i));
         }
         return resposta;
     }
@@ -91,11 +94,14 @@ public class OfertasSimuladasClient {
         LocalDate entrada = data(filtros.get("checkInDate"), LocalDate.now().plusDays(30));
         LocalDate saida = data(filtros.get("checkOutDate"), entrada.plusDays(3));
         String moeda = valor(filtros, "currency", "BRL");
+        int adultos = inteiro(filtros.get("adults"), 1);
+        int quartos = inteiro(filtros.get("roomQuantity"), 1);
+        long noites = Math.max(1, ChronoUnit.DAYS.between(entrada, saida));
         ObjectNode resposta = mapper.createObjectNode();
         ArrayNode dados = resposta.putArray("data");
         int indice = 0;
         for (String id : ids.split(",")) {
-            if (!id.isBlank()) dados.add(ofertaHotel(id.trim(), entrada, saida, moeda, indice++));
+            if (!id.isBlank()) dados.add(ofertaHotel(id.trim(), entrada, saida, moeda, adultos, quartos, noites, indice++));
         }
         resposta.putObject("meta").put("count", dados.size());
         return resposta;
@@ -109,14 +115,19 @@ public class OfertasSimuladasClient {
         return local;
     }
 
-    private ObjectNode ofertaVoo(String origem, String destino, LocalDate ida, String volta, String moeda, int indice) {
+    private ObjectNode ofertaVoo(String origem, String destino, LocalDate ida, String volta, String moeda, int adultos, int indice) {
         String companhia = indice == 0 ? "LA" : indice == 1 ? "AD" : "G3";
         String numero = String.valueOf(3000 + indice * 117);
-        BigDecimal total = BigDecimal.valueOf(1180 + indice * 245).setScale(2, RoundingMode.HALF_UP);
+        double faixaBase = faixaBaseVoo(origem, destino);
+        boolean idaEVolta = volta != null && !volta.isBlank();
+        double multiplicadorIdaEVolta = idaEVolta ? 1.78d : 1d;
+        BigDecimal total = BigDecimal.valueOf((faixaBase + indice * 180d) * multiplicadorIdaEVolta * adultos)
+                .setScale(2, RoundingMode.HALF_UP);
         LocalDateTime partida = LocalDateTime.of(ida, LocalTime.of(7 + indice * 4, 20));
         ObjectNode oferta = mapper.createObjectNode();
         oferta.put("type", "flight-offer").put("id", "LOCUS-FLIGHT-" + (indice + 1));
-        oferta.put("source", "LOCUS").put("simulated", true).put("oneWay", volta == null || volta.isBlank());
+        oferta.put("source", "LOCUS").put("simulated", true).put("oneWay", !idaEVolta)
+                .put("travelerCount", adultos).put("roundTrip", idaEVolta);
         ArrayNode itinerarios = oferta.putArray("itineraries");
         itinerarios.add(itinerario(origem, destino, partida, companhia, numero, indice));
         if (volta != null && !volta.isBlank()) {
@@ -147,17 +158,38 @@ public class OfertasSimuladasClient {
         return hotel;
     }
 
-    private ObjectNode ofertaHotel(String id, LocalDate entrada, LocalDate saida, String moeda, int indice) {
+    private ObjectNode ofertaHotel(String id, LocalDate entrada, LocalDate saida, String moeda, int adultos, int quartos, long noites, int indice) {
         String codigo = id.length() >= 8 ? id.substring(4, 7) : "LIS";
         double[] centro = centro(codigo);
         ObjectNode item = mapper.createObjectNode();
         item.put("type", "hotel-offers").put("source", "LOCUS").put("simulated", true);
         item.set("hotel", resumoHotel(id, nomeHotel(indice), codigo, centro[0] + indice * .004, centro[1] - indice * .004, indice));
         ObjectNode oferta = item.putArray("offers").addObject();
-        oferta.put("id", "LOCUS-HOTEL-OFFER-" + (indice + 1)).put("checkInDate", entrada.toString()).put("checkOutDate", saida.toString()).put("roomQuantity", 1);
+        oferta.put("id", "LOCUS-HOTEL-OFFER-" + (indice + 1)).put("checkInDate", entrada.toString()).put("checkOutDate", saida.toString())
+                .put("roomQuantity", quartos).put("adults", adultos).put("nights", noites);
         oferta.putObject("room").put("type", "STANDARD").put("typeEstimated", "DOUBLE");
-        oferta.putObject("price").put("currency", moeda.toUpperCase(Locale.ROOT)).put("total", BigDecimal.valueOf(420 + indice * 145).setScale(2, RoundingMode.HALF_UP));
+        BigDecimal diaria = BigDecimal.valueOf(420 + indice * 145L);
+        BigDecimal total = diaria.multiply(BigDecimal.valueOf(noites)).multiply(BigDecimal.valueOf(quartos)).setScale(2, RoundingMode.HALF_UP);
+        oferta.putObject("price").put("currency", moeda.toUpperCase(Locale.ROOT)).put("total", total)
+                .put("nightly", diaria).put("nights", noites);
         return item;
+    }
+
+    private double faixaBaseVoo(String origem, String destino) {
+        if (origem.equalsIgnoreCase(destino)) return 420d;
+        boolean brasil = Setores.BRASIL.contains(origem.toUpperCase(Locale.ROOT));
+        boolean europa = Setores.EUROPA.contains(destino.toUpperCase(Locale.ROOT));
+        boolean caribe = Setores.CARIBE.contains(destino.toUpperCase(Locale.ROOT));
+        if (brasil && europa) return 2600d;
+        if (brasil && caribe) return 1900d;
+        if (brasil) return 950d;
+        return 1400d;
+    }
+
+    private static final class Setores {
+        private static final java.util.Set<String> BRASIL = java.util.Set.of("GRU", "GIG", "SSA", "REC", "FOR", "NAT");
+        private static final java.util.Set<String> EUROPA = java.util.Set.of("LIS", "FNC", "MAD", "PAR", "LON", "ROM");
+        private static final java.util.Set<String> CARIBE = java.util.Set.of("CUR", "SXM", "AUA", "SDQ", "HAV");
     }
 
     private String nomeHotel(int indice) {

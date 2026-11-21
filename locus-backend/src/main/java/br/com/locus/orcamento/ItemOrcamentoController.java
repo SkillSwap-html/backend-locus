@@ -32,6 +32,14 @@ public class ItemOrcamentoController {
         );
     }
 
+    @DeleteMapping("/{itemId}")
+    public void excluir(
+            @PathVariable Long itemId,
+            @RequestParam Long usuarioSolicitanteId) {
+
+        itemOrcamentoService.excluir(itemId, usuarioSolicitanteId);
+    }
+
     @PostMapping("/estimativa-rota/{estimativaRotaId}")
     public ItemOrcamento adicionarEstimativaRota(
             @PathVariable Long estimativaRotaId,
