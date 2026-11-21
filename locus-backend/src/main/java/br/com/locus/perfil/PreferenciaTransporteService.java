@@ -82,4 +82,28 @@ public class PreferenciaTransporteService {
         return preferenciaTransporteRepository
                 .findByPerfilViajanteId(perfilId);
     }
+
+    public PreferenciaTransporte buscarOuCriarPadrao(
+            Long perfilId,
+            Long usuarioSolicitanteId) {
+
+        Optional<PreferenciaTransporte> existente = buscarPorPerfil(
+                perfilId,
+                usuarioSolicitanteId
+        );
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+
+        PerfilViajante perfilViajante = perfilViajanteRepository
+                .findById(perfilId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Perfil de viajante não encontrado."
+                ));
+        PreferenciaTransporte padrao = new PreferenciaTransporte();
+        padrao.setPerfilViajante(perfilViajante);
+        padrao.setModoTransporte(ModoTransporte.AVIAO);
+        padrao.setPrioridade(PrioridadePreferencia.INDIFERENTE);
+        return preferenciaTransporteRepository.save(padrao);
+    }
 }

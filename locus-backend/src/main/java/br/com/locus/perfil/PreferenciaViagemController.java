@@ -37,13 +37,11 @@ public class PreferenciaViagemController {
             @PathVariable Long perfilId,
             @RequestParam Long usuarioSolicitanteId) {
 
-        return preferenciaViagemService
-                .buscarPorPerfil(
-                        perfilId,
-                        usuarioSolicitanteId
-                )
-                .map(preferencia -> ResponseEntity.ok(
-                        new PreferenciaViagemResposta(preferencia)))
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(
+                new PreferenciaViagemResposta(
+                        preferenciaViagemService.buscarOuCriarPadrao(
+                                perfilId,
+                                usuarioSolicitanteId
+                        )));
     }
 }
