@@ -47,6 +47,32 @@ public class AmadeusMockData {
         return response;
     }
 
+    public JsonNode searchLocations(String keyword) {
+        String query = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
+        ObjectNode response = mapper.createObjectNode();
+        ArrayNode data = response.putArray("data");
+        if (query.contains("madeira") || query.contains("funchal")) {
+            data.add(location("FNC", "Funchal", "Portugal"));
+        } else if (query.contains("salvador")) {
+            data.add(location("SSA", "Salvador", "Brasil"));
+        } else if (query.contains("lisboa") || query.contains("lisbon") || query.contains("portugal")) {
+            data.add(location("LIS", "Lisboa", "Portugal"));
+        } else if (query.contains("curacao") || query.contains("curaçao") || query.contains("willemstad")) {
+            data.add(location("CUR", "Willemstad", "Curaçao"));
+        }
+        return response;
+    }
+
+    private ObjectNode location(String code, String city, String country) {
+        ObjectNode location = mapper.createObjectNode();
+        location.put("type", "location");
+        location.put("subType", "CITY");
+        location.put("iataCode", code);
+        location.putObject("name").put("cityName", city);
+        location.putObject("address").put("cityName", city).put("countryName", country);
+        return location;
+    }
+
     public JsonNode priceFlight(JsonNode flightOffer) {
         ObjectNode response = mapper.createObjectNode();
         ObjectNode data = response.putObject("data");

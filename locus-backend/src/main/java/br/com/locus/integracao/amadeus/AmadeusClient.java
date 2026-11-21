@@ -44,6 +44,20 @@ public class AmadeusClient {
         );
     }
 
+    public JsonNode searchLocations(String keyword) {
+        if (isMockMode()) {
+            return mockData.searchLocations(keyword);
+        }
+        return getWithToken(
+                "/v1/reference-data/locations",
+                Map.of(
+                        "subType", "AIRPORT,CITY",
+                        "keyword", keyword,
+                        "page[limit]", "5"
+                )
+        );
+    }
+
     public JsonNode priceFlightOffer(JsonNode flightOffer) {
         if (isMockMode()) {
             return mockData.priceFlight(flightOffer);

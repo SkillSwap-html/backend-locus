@@ -60,9 +60,11 @@ public class IntegracoesController {
                         + "\"natureza\":\"observado|estimado|simulado\",\"evidencia\":{\"fonte\":\"fonte e URL quando houver\",\"consultadoEm\":\"data\"}}]} . "
                         + "Conduza a conversa por etapas: primeiro passagem, depois hospedagem e só então roteiro de turismo. "
                         + "Se a pessoa já informou uma etapa, avance sem repetir perguntas. "
-                        + "Quando ela pedir um lugar, praia, museu, restaurante ou roteiro, gere pelo menos uma consulta em consultas "
-                        + "para que o sistema busque resultados reais e permita escolher. "
+                        + "Quando ela pedir um lugar, praia, museu, restaurante ou roteiro, gere consultas específicas com o destino e a cidade da viagem "
+                        + "para que o sistema busque resultados reais e permita escolher. Para locais nomeados, não preencha recomendacoes com nomes inventados: "
+                        + "deixe a confirmação para o resultado real do Google Places. "
                         + "Nunca invente nomes, preços, avaliações, disponibilidade ou imagens; se não houver dado consultado, deixe consultas/recomendacoes vazios e explique o próximo dado necessário. "
+                        + "Não repita saudações, perguntas ou respostas já dadas no histórico; responda diretamente ao último pedido e, quando houver vários dias, organize a sugestão por Dia 1, Dia 2 etc. "
                         + "Pergunte, quando ainda não souber: "
                         + "origem, destino, datas de ida e volta, duração, orçamento total "
                         + "e limites por categoria, interesses, ritmo, acessibilidade, "
@@ -140,6 +142,11 @@ public class IntegracoesController {
         filters.put("max", max == null ? null : String.valueOf(max));
 
         return amadeusClient.searchFlightOffers(filters);
+    }
+
+    @GetMapping({"/ofertas/localizacoes", "/amadeus/localizacoes"})
+    public JsonNode buscarLocalizacoes(@RequestParam @NotBlank String keyword) {
+        return amadeusClient.searchLocations(keyword);
     }
 
     @PostMapping({"/ofertas/voos/preco", "/amadeus/voos/preco"})
