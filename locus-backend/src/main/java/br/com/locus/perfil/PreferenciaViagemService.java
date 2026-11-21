@@ -40,14 +40,6 @@ public class PreferenciaViagemService {
                 usuarioSolicitanteId
         );
 
-        if (preferenciaViagemRepository
-                .existsByPerfilViajanteId(perfilId)) {
-
-            throw new RuntimeException(
-                    "Este perfil já possui preferências de viagem."
-            );
-        }
-
         if (preferenciaViagem.getTipoOrcamento() == null) {
             throw new RuntimeException(
                     "O tipo de orçamento é obrigatório."
@@ -73,9 +65,16 @@ public class PreferenciaViagemService {
             preferenciaViagem.setValorOrcamento(null);
         }
 
-        preferenciaViagem.setPerfilViajante(perfilViajante);
+        PreferenciaViagem preferenciaParaSalvar = preferenciaViagemRepository
+                .findByPerfilViajanteId(perfilId)
+                .orElseGet(PreferenciaViagem::new);
+        preferenciaParaSalvar.setPerfilViajante(perfilViajante);
+        preferenciaParaSalvar.setOrigemPreferida(preferenciaViagem.getOrigemPreferida());
+        preferenciaParaSalvar.setDestinoPreferido(preferenciaViagem.getDestinoPreferido());
+        preferenciaParaSalvar.setTipoOrcamento(preferenciaViagem.getTipoOrcamento());
+        preferenciaParaSalvar.setValorOrcamento(preferenciaViagem.getValorOrcamento());
 
-        return preferenciaViagemRepository.save(preferenciaViagem);
+        return preferenciaViagemRepository.save(preferenciaParaSalvar);
     }
 
     public Optional<PreferenciaViagem> buscarPorPerfil(

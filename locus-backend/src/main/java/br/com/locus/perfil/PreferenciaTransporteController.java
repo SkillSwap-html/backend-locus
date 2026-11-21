@@ -16,7 +16,7 @@ public class PreferenciaTransporteController {
         this.preferenciaTransporteService = preferenciaTransporteService;
     }
 
-    @PostMapping("/perfil/{perfilId}")
+    @RequestMapping(value = "/perfil/{perfilId}", method = {RequestMethod.POST, RequestMethod.PUT})
     public PreferenciaTransporteResposta cadastrar(
             @PathVariable Long perfilId,
             @RequestParam Long usuarioSolicitanteId,

@@ -195,9 +195,8 @@ public class AmadeusClient {
             throw new ExternalApiException(
                     PROVIDER,
                     503,
-                    "A integração de ofertas de viagem está desabilitada. "
-                            + "Use AMADEUS_MODE=mock para o catálogo simulado "
-                            + "ou AMADEUS_MODE=real com as credenciais do provedor."
+                    "As ofertas de viagem estão desativadas. "
+                            + "Use AMADEUS_MODE=mock para a demonstração ou AMADEUS_MODE=real com as credenciais do provedor."
             );
         }
 

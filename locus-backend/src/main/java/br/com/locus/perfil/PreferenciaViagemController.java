@@ -16,7 +16,7 @@ public class PreferenciaViagemController {
         this.preferenciaViagemService = preferenciaViagemService;
     }
 
-    @PostMapping("/perfil/{perfilId}")
+    @RequestMapping(value = "/perfil/{perfilId}", method = {RequestMethod.POST, RequestMethod.PUT})
     public PreferenciaViagemResposta cadastrar(
             @PathVariable Long perfilId,
             @RequestParam Long usuarioSolicitanteId,

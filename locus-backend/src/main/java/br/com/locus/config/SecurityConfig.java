@@ -1,5 +1,7 @@
 package br.com.locus.config;
 
+import br.com.locus.usuario.TipoUsuario;
+import br.com.locus.usuario.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -30,11 +32,14 @@ import java.util.List;
 public class SecurityConfig {
 
     private final boolean securityEnabled;
+    private final UsuarioRepository usuarioRepository;
 
     public SecurityConfig(
-            @Value("${app.security.enabled:false}") boolean securityEnabled) {
+            @Value("${app.security.enabled:false}") boolean securityEnabled,
+            UsuarioRepository usuarioRepository) {
 
         this.securityEnabled = securityEnabled;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Bean
@@ -52,7 +57,7 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/error").permitAll()
+                        .requestMatchers("/actuator/health", "/error", "/api/teste").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -126,6 +131,18 @@ public class SecurityConfig {
         Boolean admin = jwt.getClaim("admin");
         if (Boolean.TRUE.equals(admin)) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"));
+        }
+
+        String email = jwt.getClaimAsString("email");
+        if (email != null) {
+            usuarioRepository.findByEmailIgnoreCase(email).ifPresent(usuario -> {
+                if (usuario.getTipoUsuario() == TipoUsuario.ADMINISTRADOR) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"));
+                }
+                if (usuario.getTipoUsuario() == TipoUsuario.RESPONSAVEL_TECNICO) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_RESPONSAVEL_TECNICO"));
+                }
+            });
         }
 
         return authorities;

@@ -1,5 +1,7 @@
 package br.com.locus.usuario;
 
+import br.com.locus.admin.AdminEmailRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,9 +11,16 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final AdminEmailRepository adminEmailRepository;
+    private final String adminInitialEmail;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            AdminEmailRepository adminEmailRepository,
+            @Value("${app.admin.initial-email:}") String adminInitialEmail) {
         this.usuarioRepository = usuarioRepository;
+        this.adminEmailRepository = adminEmailRepository;
+        this.adminInitialEmail = adminInitialEmail == null ? "" : adminInitialEmail.trim();
     }
 
     public Usuario salvar(Usuario usuario) {
@@ -28,21 +37,42 @@ public class UsuarioService {
             throw new RuntimeException("O firebaseUid é obrigatório.");
         }
 
-        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RuntimeException(
-                    "Já existe um usuário cadastrado com este e-mail."
-            );
+        if (usuario.getEmail().equalsIgnoreCase(adminInitialEmail)
+                && adminInitialEmail.contains("@")) {
+            adminEmailRepository.findByEmailIgnoreCase(adminInitialEmail)
+                    .orElseGet(() -> adminEmailRepository.save(
+                            new br.com.locus.admin.AdminEmail(adminInitialEmail.toLowerCase())
+                    ));
         }
 
-        if (usuarioRepository.existsByFirebaseUid(usuario.getFirebaseUid())) {
-            throw new RuntimeException(
-                    "Já existe um usuário cadastrado com este firebaseUid."
-            );
+        Usuario existente = usuarioRepository.findByFirebaseUid(usuario.getFirebaseUid()).orElse(null);
+        Usuario porEmail = usuarioRepository.findByEmailIgnoreCase(usuario.getEmail()).orElse(null);
+        if (existente == null && porEmail != null) {
+            existente = porEmail;
+        }
+        if (existente != null) {
+            existente.setFirebaseUid(usuario.getFirebaseUid());
+            existente.setNome(usuario.getNome());
+            existente.setEmail(usuario.getEmail());
+            existente.setTermosAceitos(usuario.isTermosAceitos());
+            if (ehAdministrador(usuario.getEmail())) {
+                existente.setTipoUsuario(TipoUsuario.ADMINISTRADOR);
+            }
+            return usuarioRepository.save(existente);
         }
 
-        usuario.setTipoUsuario(TipoUsuario.VIAJANTE);
-
+        usuario.setTipoUsuario(
+                ehAdministrador(usuario.getEmail())
+                        ? TipoUsuario.ADMINISTRADOR
+                        : TipoUsuario.VIAJANTE
+        );
         return usuarioRepository.save(usuario);
+    }
+
+    private boolean ehAdministrador(String email) {
+        return email != null
+                && (email.equalsIgnoreCase(adminInitialEmail)
+                || adminEmailRepository.existsByEmailIgnoreCase(email));
     }
 
     public List<Usuario> listarTodos() {

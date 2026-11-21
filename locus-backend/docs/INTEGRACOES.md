@@ -18,7 +18,7 @@ Divisão das integrações previstas na ERS e do que o backend faz com cada uma.
 
 As rotas REST desses adaptadores estão documentadas em `docs/API.md`. Elas retornam a resposta do provedor para que os módulos de negócio possam normalizar, salvar, auditar e exibir os dados. As credenciais não ficam no código.
 
-As rotas de voos e hospedagem usam `AMADEUS_MODE=mock` por padrão. Nesse modo, o backend entrega um catálogo simulado determinístico do próprio Locus, com a mesma estrutura principal esperada pelo frontend, sem inventar preços por meio de um modelo de linguagem. A interface identifica esses valores como `Locus (simulado)`. Para desativar completamente essas rotas, use `AMADEUS_MODE=disabled`.
+As rotas de voos e hospedagem usam `AMADEUS_MODE=mock` para demonstração e identificam os resultados como simulados. Para consultar ofertas externas, use `AMADEUS_MODE=real` com as credenciais do provedor.
 
 Quando `GEMINI_WEB_SEARCH_ENABLED=true`, o Gemini pode consultar a busca do Google para apoiar respostas atuais. Essas respostas continuam sendo recomendações sujeitas a conferência: o Locus não transforma pesquisa na web em disponibilidade garantida, reserva real ou preço vinculante. Se o Gemini falhar, o endpoint do assistente tenta o Groq configurado em `GROQ_*`.
 

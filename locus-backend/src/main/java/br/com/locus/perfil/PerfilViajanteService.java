@@ -39,12 +39,6 @@ public class PerfilViajanteService {
                 .orElseThrow(() ->
                         new RuntimeException("Usuário não encontrado."));
 
-        if (perfilViajanteRepository.existsByUsuarioId(usuarioId)) {
-            throw new RuntimeException(
-                    "Este usuário já possui um perfil de viajante."
-            );
-        }
-
         if (perfilViajante.getIdade() == null
                 || perfilViajante.getIdade() <= 0) {
 
@@ -85,9 +79,17 @@ public class PerfilViajanteService {
             );
         }
 
-        perfilViajante.setUsuario(usuario);
+        PerfilViajante perfilParaSalvar = perfilViajanteRepository
+                .findByUsuarioId(usuarioId)
+                .orElseGet(PerfilViajante::new);
+        perfilParaSalvar.setUsuario(usuario);
+        perfilParaSalvar.setIdade(perfilViajante.getIdade());
+        perfilParaSalvar.setRitmoViagem(perfilViajante.getRitmoViagem());
+        perfilParaSalvar.setInteresses(perfilViajante.getInteresses());
+        perfilParaSalvar.setMobilidade(perfilViajante.getMobilidade());
+        perfilParaSalvar.setPreferenciaHospedagem(perfilViajante.getPreferenciaHospedagem());
 
-        return perfilViajanteRepository.save(perfilViajante);
+        return perfilViajanteRepository.save(perfilParaSalvar);
     }
 
     public List<PerfilViajante> listarTodos(

@@ -39,14 +39,6 @@ public class PreferenciaTransporteService {
                 usuarioSolicitanteId
         );
 
-        if (preferenciaTransporteRepository
-                .existsByPerfilViajanteId(perfilId)) {
-
-            throw new RuntimeException(
-                    "Este perfil já possui uma preferência de transporte."
-            );
-        }
-
         if (preferenciaTransporte.getModoTransporte() == null) {
             throw new RuntimeException(
                     "O modo de transporte é obrigatório."
@@ -59,12 +51,15 @@ public class PreferenciaTransporteService {
             );
         }
 
-        preferenciaTransporte.setPerfilViajante(
-                perfilViajante
-        );
+        PreferenciaTransporte preferenciaParaSalvar = preferenciaTransporteRepository
+                .findByPerfilViajanteId(perfilId)
+                .orElseGet(PreferenciaTransporte::new);
+        preferenciaParaSalvar.setPerfilViajante(perfilViajante);
+        preferenciaParaSalvar.setModoTransporte(preferenciaTransporte.getModoTransporte());
+        preferenciaParaSalvar.setPrioridade(preferenciaTransporte.getPrioridade());
 
         return preferenciaTransporteRepository.save(
-                preferenciaTransporte
+                preferenciaParaSalvar
         );
     }
 

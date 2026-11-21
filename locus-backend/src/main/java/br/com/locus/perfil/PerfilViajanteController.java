@@ -18,7 +18,7 @@ public class PerfilViajanteController {
         this.perfilViajanteService = perfilViajanteService;
     }
 
-    @PostMapping("/usuario/{usuarioId}")
+    @RequestMapping(value = "/usuario/{usuarioId}", method = {RequestMethod.POST, RequestMethod.PUT})
     public PerfilViajanteResposta cadastrar(
             @PathVariable Long usuarioId,
             @RequestParam Long usuarioSolicitanteId,

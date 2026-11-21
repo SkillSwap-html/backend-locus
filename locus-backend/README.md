@@ -16,7 +16,7 @@ Backend do Locus, plataforma de apoio ao planejamento de viagens. O projeto foi 
 - configuração de CORS por variável de ambiente;
 - autenticação por token Firebase quando a segurança estiver habilitada.
 - adaptadores para Places, Routes, Street View, Gemini e Groq;
-- catálogo local simulado de voos e hotéis, mantendo as rotas compatíveis com o contrato previsto para o Amadeus.
+- adaptadores de voos e hotéis com catálogo simulado identificável para demonstração e opção de Amadeus real.
 
 ## Requisitos
 
@@ -47,6 +47,7 @@ Variáveis principais:
 - `FLYWAY_ENABLED`: habilita as migrations;
 - `SECURITY_ENABLED`: habilita a validação de tokens;
 - `FIREBASE_PROJECT_ID`: projeto Firebase usado para validar tokens;
+- `ADMIN_INITIAL_EMAIL`: e-mail do primeiro administrador da plataforma. O usuário é promovido no primeiro login e pode autorizar outros e-mails pelo painel;
 - `CORS_ALLOWED_ORIGINS`: origens autorizadas para o frontend.
 
 As variáveis das integrações externas também estão no `.env.example`:
@@ -59,7 +60,7 @@ As variáveis das integrações externas também estão no `.env.example`:
 - Gemini API: `GEMINI_API_KEY`, `GEMINI_MODEL` e limites de geração;
 - pesquisa web opcional do Gemini: `GEMINI_WEB_SEARCH_ENABLED`;
 - Groq como fallback do assistente: `GROQ_ENABLED`, `GROQ_API_KEY` e `GROQ_MODEL`;
-- ofertas de voos e hospedagens: `AMADEUS_MODE=real` com credenciais do provedor; sem credenciais, mantenha `AMADEUS_MODE=disabled`.
+- ofertas de voos e hospedagens: `AMADEUS_MODE=mock` para demonstração ou `AMADEUS_MODE=real` com credenciais do provedor. A interface identifica ofertas simuladas.
 
 Cada integração possui uma variável `*_ENABLED`, uma URL-base e um timeout. As integrações começam desligadas para que a aplicação local não dependa de credenciais. Depois de preencher as chaves, altere somente as integrações que serão usadas para `true`.
 
