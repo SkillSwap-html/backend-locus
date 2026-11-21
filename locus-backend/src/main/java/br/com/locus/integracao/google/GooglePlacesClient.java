@@ -3,6 +3,7 @@ package br.com.locus.integracao.google;
 import br.com.locus.integracao.ExternalApiClientSupport;
 import br.com.locus.integracao.IntegrationProperties;
 import tools.jackson.databind.JsonNode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -57,7 +58,7 @@ public class GooglePlacesClient {
         try {
             return client()
                     .get()
-                    .uri("/v1/" + placeId)
+                    .uri("/v1/places/" + placeId)
                     .header("X-Goog-Api-Key", properties.getApiKey())
                     .header("X-Goog-FieldMask",
                             "id,displayName,formattedAddress,location,rating,"
@@ -83,6 +84,7 @@ public class GooglePlacesClient {
                     .uri(path)
                     .header("X-Goog-Api-Key", properties.getApiKey())
                     .header("X-Goog-FieldMask", fieldMask)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
                     .body(JsonNode.class);

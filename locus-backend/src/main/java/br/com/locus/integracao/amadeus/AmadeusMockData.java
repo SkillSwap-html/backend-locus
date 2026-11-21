@@ -92,10 +92,24 @@ public class AmadeusMockData {
         ObjectNode response = mapper.createObjectNode();
         response.putObject("meta").put("count", 3);
         ArrayNode data = response.putArray("data");
-        data.add(hotelSummary("LOC-" + code + "-001", "Locus Central Hotel", code, 38.7223, -9.1393));
-        data.add(hotelSummary("LOC-" + code + "-002", "Rota Verde Suites", code, 38.7167, -9.1333));
-        data.add(hotelSummary("LOC-" + code + "-003", "Vista do Viajante", code, 38.7280, -9.1500));
+        double[] centro = centroDaCidade(code);
+        data.add(hotelSummary("LOC-" + code + "-001", "Locus Central Hotel", code, centro[0], centro[1]));
+        data.add(hotelSummary("LOC-" + code + "-002", "Rota Verde Suites", code, centro[0] + 0.004, centro[1] - 0.004));
+        data.add(hotelSummary("LOC-" + code + "-003", "Vista do Viajante", code, centro[0] - 0.005, centro[1] + 0.006));
         return response;
+    }
+
+    private double[] centroDaCidade(String cityCode) {
+        return switch (cityCode) {
+            case "CUR" -> new double[]{12.1090, -68.9330};
+            case "FNC" -> new double[]{32.6500, -16.9100};
+            case "SSA" -> new double[]{-12.9714, -38.5014};
+            case "GRU" -> new double[]{-23.4356, -46.4731};
+            case "GIG" -> new double[]{-22.9068, -43.1729};
+            case "REC" -> new double[]{-8.0476, -34.8770};
+            case "FOR" -> new double[]{-3.7319, -38.5267};
+            default -> new double[]{38.7223, -9.1393};
+        };
     }
 
     public JsonNode searchHotels(Map<String, String> filters) {
@@ -225,12 +239,13 @@ public class AmadeusMockData {
         item.put("type", "hotel-offers");
         item.put("source", "LOCUS");
         item.put("simulated", true);
+        double[] centro = centroDaCidade(hotelId.length() >= 8 ? hotelId.substring(4, 7) : "LIS");
         item.set("hotel", hotelSummary(
                 hotelId,
                 index == 0 ? "Locus Central Hotel" : index == 1 ? "Rota Verde Suites" : "Vista do Viajante",
                 hotelId.length() >= 8 ? hotelId.substring(4, 7) : "LIS",
-                38.7223 + index * 0.004,
-                -9.1393 - index * 0.004
+                centro[0] + index * 0.004,
+                centro[1] - index * 0.004
         ));
 
         ArrayNode offers = item.putArray("offers");

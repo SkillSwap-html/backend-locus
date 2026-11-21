@@ -3,6 +3,7 @@ package br.com.locus.integracao.google;
 import br.com.locus.integracao.ExternalApiClientSupport;
 import br.com.locus.integracao.IntegrationProperties;
 import tools.jackson.databind.JsonNode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -36,6 +37,7 @@ public class GoogleRoutesClient {
                     .header("X-Goog-FieldMask",
                             "routes.duration,routes.distanceMeters,"
                                     + "routes.polyline.encodedPolyline,routes.legs")
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .retrieve()
                     .body(JsonNode.class);

@@ -6,6 +6,7 @@ import br.com.locus.usuario.Usuario;
 import org.springframework.web.bind.annotation.*;
 import br.com.locus.admin.dto.UsuarioAdminResposta;
 import br.com.locus.admin.dto.AdminEmailResposta;
+import br.com.locus.admin.dto.DashboardAdminResposta;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -105,6 +106,15 @@ public class AdminController {
         }
 
         return adminService.listarUsuarios();
+    }
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("@securityMode.permitOrHasAdmin(authentication)")
+    public DashboardAdminResposta dashboard(
+            @RequestParam Long usuarioSolicitanteId) {
+
+        controleAcessoService.exigirAdministrador(usuarioSolicitanteId);
+        return adminService.dashboard();
     }
 
     @GetMapping("/administradores")
