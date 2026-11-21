@@ -2,7 +2,7 @@ package br.com.locus.integracao;
 
 import br.com.locus.integracao.gemini.GeminiClient;
 import br.com.locus.integracao.groq.GroqClient;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 
 @Component

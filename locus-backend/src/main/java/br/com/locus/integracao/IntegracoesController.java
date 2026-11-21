@@ -4,7 +4,6 @@ import br.com.locus.integracao.amadeus.AmadeusClient;
 import br.com.locus.integracao.google.GooglePlacesClient;
 import br.com.locus.integracao.google.GoogleRoutesClient;
 import br.com.locus.integracao.google.GoogleStreetViewClient;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.JsonNode;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

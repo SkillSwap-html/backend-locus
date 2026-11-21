@@ -2,7 +2,7 @@ package br.com.locus.integracao.google;
 
 import br.com.locus.integracao.ExternalApiClientSupport;
 import br.com.locus.integracao.IntegrationProperties;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
