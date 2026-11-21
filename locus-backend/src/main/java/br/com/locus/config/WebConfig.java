@@ -19,16 +19,26 @@ public class WebConfig {
             String allowedOrigins) {
 
         CorsConfiguration configuration = new CorsConfiguration();
+        String origensConfiguradas = normalizarTextoConfiguracao(allowedOrigins);
         configuration.setAllowedOrigins(
-                Arrays.stream(allowedOrigins.split(","))
+                Arrays.stream(origensConfiguradas.split(","))
                         .map(String::trim)
+                        .map(this::normalizarOrigem)
                         .filter(origin -> !origin.isBlank())
                         .toList()
         );
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With",
+                "Cache-Control",
+                "Pragma"
+        ));
         configuration.setExposedHeaders(List.of("Content-Disposition"));
         configuration.setAllowCredentials(true);
 
@@ -36,5 +46,21 @@ public class WebConfig {
                 new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private String normalizarOrigem(String origem) {
+        String normalizada = normalizarTextoConfiguracao(origem);
+        return normalizada.replaceFirst("/+$", "");
+    }
+
+    private String normalizarTextoConfiguracao(String valor) {
+        String normalizado = valor == null ? "" : valor.trim();
+        if (normalizado.startsWith("\"") || normalizado.startsWith("'")) {
+            normalizado = normalizado.substring(1).trim();
+        }
+        if (normalizado.endsWith("\"") || normalizado.endsWith("'")) {
+            normalizado = normalizado.substring(0, normalizado.length() - 1).trim();
+        }
+        return normalizado;
     }
 }
