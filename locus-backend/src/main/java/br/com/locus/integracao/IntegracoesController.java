@@ -62,6 +62,8 @@ public class IntegracoesController {
                         + "\"natureza\":\"observado|estimado|simulado\",\"evidencia\":{\"fonte\":\"fonte e URL quando houver\",\"consultadoEm\":\"data\"}}]} . "
                         + "Conduza a conversa por etapas: primeiro passagem, depois hospedagem e só então roteiro de turismo. "
                         + "Se a pessoa já informou uma etapa, avance sem repetir perguntas. "
+                        + "Em pedidos de roteiro, turismo ou recomendações de locais, nunca retorne somente hotéis: inclua consultas separadas para praias, restaurantes/gastronomia e pontos turísticos, museus, parques ou atrações. "
+                        + "Só inclua hotéis ou hospedagens quando a pessoa pedir hospedagem ou quando a etapa atual for hospedagem. "
                         + "Quando ela pedir um lugar, praia, museu, restaurante ou roteiro, gere consultas específicas e pesquisáveis, com o nome do local, cidade e país da viagem; nunca escreva apenas 'consultas para o Google Places'. "
                         + "para que o sistema busque resultados reais e permita escolher. Para locais nomeados, não preencha recomendacoes com nomes inventados: "
                         + "deixe a confirmação para o resultado real do Google Places. "
