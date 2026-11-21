@@ -1,19 +1,18 @@
 # Estágio 1: Build da Aplicação
 FROM eclipse-temurin:21-jdk AS build
 
-# Instala o Maven
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-
 # Define o diretório de trabalho
 WORKDIR /app
 
-# Copia o pom.xml e baixa as dependências
-COPY locus-backend/pom.xml .
-RUN mvn dependency:go-offline
+# Copia o Maven Wrapper e o pom.xml, depois baixa as dependências
+COPY mvnw .
+COPY .mvn ./.mvn
+COPY pom.xml .
+RUN chmod +x mvnw && ./mvnw dependency:go-offline
 
 # Copia o resto do código fonte e compila, pulando os testes
-COPY locus-backend/src ./src
-RUN mvn clean package -DskipTests -Powasp-skip
+COPY src ./src
+RUN ./mvnw clean package -DskipTests -Powasp-skip
 
 
 # Estágio 2: Execução da Aplicação
