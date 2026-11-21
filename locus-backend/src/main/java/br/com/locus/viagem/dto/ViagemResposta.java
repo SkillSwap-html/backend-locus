@@ -18,6 +18,7 @@ public class ViagemResposta {
     private LocalDate dataFim;
     private ModoTransporte modoTransporte;
     private TipoOrcamento tipoOrcamento;
+    private boolean mochilao;
     private ViabilidadeTransporteTerrestre viabilidadeTransporteTerrestre;
     private UsuarioResposta usuario;
 
@@ -30,6 +31,7 @@ public class ViagemResposta {
         this.dataFim = viagem.getDataFim();
         this.modoTransporte = viagem.getModoTransporte();
         this.tipoOrcamento = viagem.getTipoOrcamento();
+        this.mochilao = viagem.isMochilao();
 
         if (viagem.getViabilidadeTransporteTerrestre() == null) {
             this.viabilidadeTransporteTerrestre =
@@ -76,6 +78,10 @@ public class ViagemResposta {
 
     public TipoOrcamento getTipoOrcamento() {
         return tipoOrcamento;
+    }
+
+    public boolean isMochilao() {
+        return mochilao;
     }
 
     public ViabilidadeTransporteTerrestre getViabilidadeTransporteTerrestre() {

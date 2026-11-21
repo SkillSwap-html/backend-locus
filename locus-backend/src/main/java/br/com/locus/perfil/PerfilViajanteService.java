@@ -111,6 +111,20 @@ public class PerfilViajanteService {
                 usuarioSolicitanteId
         );
 
-        return perfilViajanteRepository.findByUsuarioId(usuarioId);
+        Optional<PerfilViajante> existente = perfilViajanteRepository.findByUsuarioId(usuarioId);
+        if (existente.isPresent()) {
+            return existente;
+        }
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+        PerfilViajante perfil = new PerfilViajante();
+        perfil.setUsuario(usuario);
+        perfil.setIdade(18);
+        perfil.setRitmoViagem("equilibrado");
+        perfil.setInteresses("geral");
+        perfil.setMobilidade("sem-restricao");
+        perfil.setPreferenciaHospedagem("hotel");
+        return Optional.of(perfilViajanteRepository.save(perfil));
     }
 }

@@ -8,6 +8,9 @@ import br.com.locus.perfil.PreferenciaTransporte;
 import br.com.locus.perfil.PreferenciaTransporteRepository;
 import br.com.locus.perfil.PrioridadePreferencia;
 import br.com.locus.perfil.TipoOrcamento;
+import br.com.locus.notificacao.NotificacaoService;
+import br.com.locus.notificacao.TipoNotificacao;
+import br.com.locus.notificacao.dto.NotificacaoRequest;
 import br.com.locus.usuario.Usuario;
 import br.com.locus.usuario.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ public class ViagemService {
     private final PreferenciaTransporteRepository preferenciaTransporteRepository;
     private final ControleAcessoService controleAcessoService;
     private final PermissaoCompartilhamentoService permissaoCompartilhamentoService;
+    private final NotificacaoService notificacaoService;
 
     public ViagemService(
             ViagemRepository viagemRepository,
@@ -33,7 +37,8 @@ public class ViagemService {
             PerfilViajanteRepository perfilViajanteRepository,
             PreferenciaTransporteRepository preferenciaTransporteRepository,
             ControleAcessoService controleAcessoService,
-            PermissaoCompartilhamentoService permissaoCompartilhamentoService) {
+            PermissaoCompartilhamentoService permissaoCompartilhamentoService,
+            NotificacaoService notificacaoService) {
 
         this.viagemRepository = viagemRepository;
         this.usuarioRepository = usuarioRepository;
@@ -43,6 +48,7 @@ public class ViagemService {
         this.controleAcessoService = controleAcessoService;
         this.permissaoCompartilhamentoService =
                 permissaoCompartilhamentoService;
+        this.notificacaoService = notificacaoService;
     }
 
     public Viagem salvar(
@@ -117,6 +123,20 @@ public class ViagemService {
             );
         }
 
+        boolean existeConflito = viagemRepository
+                .findByUsuarioIdAndDataInicioLessThanEqualAndDataFimGreaterThanEqual(
+                        usuarioId,
+                        viagem.getDataFim(),
+                        viagem.getDataInicio())
+                .stream()
+                .anyMatch(item -> !viagem.isMochilao());
+
+        if (existeConflito) {
+            throw new RuntimeException(
+                    "Já existe uma viagem no mesmo período. Marque como mochilão para organizar vários destinos na mesma janela."
+            );
+        }
+
         if (viagem.getModoTransporte() == null) {
             throw new RuntimeException(
                     "O modo de transporte é obrigatório."
@@ -163,7 +183,13 @@ public class ViagemService {
 
         viagem.setUsuario(usuario);
 
-        return viagemRepository.save(viagem);
+        Viagem viagemSalva = viagemRepository.save(viagem);
+        NotificacaoRequest notificacao = new NotificacaoRequest();
+        notificacao.setTipo(TipoNotificacao.VIAGEM);
+        notificacao.setTitulo("Viagem criada");
+        notificacao.setMensagem("Seu roteiro para " + viagemSalva.getDestino() + " já está pronto para receber escolhas.");
+        notificacaoService.criar(usuarioId, notificacao);
+        return viagemSalva;
     }
 
     public List<Viagem> listarPorUsuario(

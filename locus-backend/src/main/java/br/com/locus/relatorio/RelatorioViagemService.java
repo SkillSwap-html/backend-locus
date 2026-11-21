@@ -338,13 +338,13 @@ public class RelatorioViagemService {
             float x = 50;
             float y = 735;
 
-            desenharMarca(conteudo, x, 780, fonteNegrito);
+            desenharMarca(conteudo, x, 770, fonteNegrito);
 
             escreverTexto(
                     conteudo,
                     fonteNegrito,
                     18,
-                    "Relatorio de Viagem - Locus",
+                    "Seu roteiro de viagem",
                     x,
                     y
             );
@@ -369,6 +369,17 @@ public class RelatorioViagemService {
                     reserva.getViagem()
                             .getUsuario()
                             .getNome(),
+                    x,
+                    y
+            );
+
+            y -= 25;
+
+            escreverLinha(
+                    conteudo,
+                    fonteNegrito,
+                    "Viagem:",
+                    reserva.getViagem().getTitulo(),
                     x,
                     y
             );
@@ -939,7 +950,24 @@ public class RelatorioViagemService {
         conteudo.setNonStrokingColor(
                 new PDColor(new float[]{0.91f, 0.47f, 0.29f}, PDDeviceRGB.INSTANCE)
         );
-        conteudo.addRect(x, y - 12, 14, 14);
+        conteudo.moveTo(x + 14, y + 5);
+        conteudo.curveTo(x + 2, y + 20, x - 2, y - 2, x + 14, y - 17);
+        conteudo.curveTo(x + 30, y - 2, x + 26, y + 20, x + 14, y + 5);
+        conteudo.closePath();
+        conteudo.fill();
+        conteudo.setNonStrokingColor(
+                new PDColor(new float[]{0.99f, 0.97f, 0.94f}, PDDeviceRGB.INSTANCE)
+        );
+        float centroX = x + 14;
+        float centroY = y + 3;
+        float raio = 7;
+        float controle = raio * 0.5522848f;
+        conteudo.moveTo(centroX + raio, centroY);
+        conteudo.curveTo(centroX + raio, centroY + controle, centroX + controle, centroY + raio, centroX, centroY + raio);
+        conteudo.curveTo(centroX - controle, centroY + raio, centroX - raio, centroY + controle, centroX - raio, centroY);
+        conteudo.curveTo(centroX - raio, centroY - controle, centroX - controle, centroY - raio, centroX, centroY - raio);
+        conteudo.curveTo(centroX + controle, centroY - raio, centroX + raio, centroY - controle, centroX + raio, centroY);
+        conteudo.closePath();
         conteudo.fill();
 
         conteudo.setNonStrokingColor(
@@ -955,6 +983,15 @@ public class RelatorioViagemService {
                 "LOCUS",
                 x + 20,
                 y + 1
+        );
+
+        escreverTexto(
+                conteudo,
+                fonteNegrito,
+                8,
+                "Planeje viagens com inteligencia",
+                x + 20,
+                y - 13
         );
 
         conteudo.setNonStrokingColor(

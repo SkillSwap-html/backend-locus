@@ -182,6 +182,7 @@ public class AmadeusMockData {
         hotel.put("cityCode", cityCode);
         hotel.put("source", "LOCUS");
         hotel.put("simulated", true);
+        hotel.put("imageUrl", imagemHotel(cityCode, hotelId));
         hotel.putObject("geoCode").put("latitude", latitude).put("longitude", longitude);
         hotel.putObject("address").put("countryCode", "BR");
         return hotel;
@@ -218,6 +219,16 @@ public class AmadeusMockData {
                 .put("total", BigDecimal.valueOf(420 + index * 145).setScale(2, RoundingMode.HALF_UP));
         offer.putObject("policies").put("paymentType", "GUARANTEE");
         return item;
+    }
+
+    private String imagemHotel(String cityCode, String hotelId) {
+        int indice = hotelId.endsWith("002") ? 1 : hotelId.endsWith("003") ? 2 : 0;
+        String[] imagens = {
+                "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80",
+                "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80",
+                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=900&q=80"
+        };
+        return imagens[indice] + "&locus_city=" + cityCode;
     }
 
     private static String value(Map<String, String> values, String key, String fallback) {

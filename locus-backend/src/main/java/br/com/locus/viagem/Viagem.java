@@ -39,6 +39,9 @@ public class Viagem {
     @Column(nullable = false)
     private TipoOrcamento tipoOrcamento = TipoOrcamento.ABERTO;
 
+    @Column(nullable = false)
+    private boolean mochilao = false;
+
     @Enumerated(EnumType.STRING)
     private ViabilidadeTransporteTerrestre viabilidadeTransporteTerrestre;
 
@@ -122,5 +125,13 @@ public class Viagem {
 
     public void setTipoOrcamento(TipoOrcamento tipoOrcamento) {
         this.tipoOrcamento = tipoOrcamento;
+    }
+
+    public boolean isMochilao() {
+        return mochilao;
+    }
+
+    public void setMochilao(boolean mochilao) {
+        this.mochilao = mochilao;
     }
 }
