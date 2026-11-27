@@ -910,7 +910,8 @@ public class RelatorioViagemService {
                                     fonteNormal,
                                     10,
                                     "Custo estimado: "
-                                            + formatarDinheiro(item.getCustoEstimado()),
+                                            + formatarDinheiro(
+                                                    BigDecimal.valueOf(item.getCustoEstimado())),
                                     x + 15,
                                     y
                             );
