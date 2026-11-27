@@ -466,11 +466,7 @@ public class RelatorioViagemService {
                     fonteNegrito,
                     "Valor total simulado:",
                     formatarDinheiro(
-                            // O quadro do orçamento é recalculado com os itens
-                            // atuais da viagem. O cabeçalho precisa usar a
-                            // mesma fonte para não apresentar dois totais
-                            // diferentes no mesmo PDF.
-                            resumoOrcamento.getTotalGasto()
+                            reserva.getValorTotalSimulado()
                     ),
                     x,
                     y

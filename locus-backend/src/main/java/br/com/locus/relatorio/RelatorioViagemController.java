@@ -43,17 +43,9 @@ public class RelatorioViagemController {
             @PathVariable Long relatorioId,
             @RequestParam Long usuarioSolicitanteId) {
 
-        RelatorioViagem existente =
+        RelatorioViagem relatorio =
                 relatorioViagemService.buscarPorId(
                         relatorioId,
-                        usuarioSolicitanteId
-                );
-
-        // Recalcula o PDF no momento do download para que o arquivo não
-        // preserve um total antigo caso o orçamento tenha sido atualizado.
-        RelatorioViagem relatorio =
-                relatorioViagemService.gerar(
-                        existente.getReservaSimulada().getId(),
                         usuarioSolicitanteId
                 );
 
