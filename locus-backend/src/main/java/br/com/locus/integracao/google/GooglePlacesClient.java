@@ -11,13 +11,20 @@ import org.springframework.web.client.RestClientResponseException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Component
 public class GooglePlacesClient {
 
     private static final String PROVIDER = "Google Places API";
+    private static final long CACHE_TTL_MILLIS = 60_000L;
 
     private final IntegrationProperties.Places properties;
+    private final ConcurrentMap<String, CachedSearch> textSearchCache = new ConcurrentHashMap<>();
+
+    private record CachedSearch(JsonNode body, long expiresAt) {
+    }
 
     public GooglePlacesClient(IntegrationProperties properties) {
         this.properties = properties.getGoogle().getPlaces();
@@ -26,16 +33,27 @@ public class GooglePlacesClient {
     public JsonNode textSearch(String textQuery, String languageCode) {
         requireConfiguration();
 
+        String cacheKey = (textQuery == null ? "" : textQuery.trim().toLowerCase())
+                + "|"
+                + (languageCode == null ? "" : languageCode.trim().toLowerCase());
+        CachedSearch cached = textSearchCache.get(cacheKey);
+        if (cached != null && cached.expiresAt() > System.currentTimeMillis()) {
+            return cached.body();
+        }
+
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("textQuery", textQuery);
         if (languageCode != null && !languageCode.isBlank()) {
             body.put("languageCode", languageCode);
         }
 
-        return post("/v1/places:searchText", body,
+        JsonNode response = post("/v1/places:searchText", body,
                 "places.displayName,places.formattedAddress,places.location,"
                         + "places.id,places.rating,places.priceLevel,places.types,"
                         + "places.currentOpeningHours,places.editorialSummary,places.photos");
+        textSearchCache.put(cacheKey, new CachedSearch(response,
+                System.currentTimeMillis() + CACHE_TTL_MILLIS));
+        return response;
     }
 
     public byte[] photo(String photoName, Integer maxWidthPx) {
