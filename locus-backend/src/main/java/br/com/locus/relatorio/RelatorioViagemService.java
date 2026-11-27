@@ -931,6 +931,7 @@ public class RelatorioViagemService {
                                 case VISITAS -> "Visita";
                                 case ALIMENTACAO -> "Alimentacao";
                                 case TRANSPORTE_LOCAL -> "Transporte local";
+                                case EXTRAS -> "Extras";
                                 default -> null;
                             };
                             if (rotulo == null) continue;
