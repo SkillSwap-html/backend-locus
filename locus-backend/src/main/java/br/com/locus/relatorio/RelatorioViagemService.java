@@ -113,11 +113,10 @@ public class RelatorioViagemService {
                                 "Relatório existente não pôde ser recuperado."
                         ));
                 String nomeArquivo = nomeArquivoRoteiro(reserva.getViagem());
-                if (!nomeArquivo.equals(existente.getNomeArquivo())) {
-                    existente.setNomeArquivo(nomeArquivo);
-                    return relatorioViagemRepository.save(existente);
-                }
-                return existente;
+                existente.setNomeArquivo(nomeArquivo);
+                existente.setArquivoPdf(gerarPdf(reserva));
+                existente.setDataGeracao(LocalDateTime.now());
+                return relatorioViagemRepository.save(existente);
             }
 
             byte[] pdf = gerarPdf(reserva);
@@ -326,6 +325,7 @@ public class RelatorioViagemService {
             criarPaginasRoteiro(
                     documento,
                     diasRoteiro,
+                    itensOrcamento,
                     fonteNormal,
                     fonteNegrito
             );
@@ -755,6 +755,7 @@ public class RelatorioViagemService {
     private void criarPaginasRoteiro(
             PDDocument documento,
             List<DiaRoteiro> diasRoteiro,
+            List<ItemOrcamento> itensOrcamento,
             PDType1Font fonteNormal,
             PDType1Font fonteNegrito) throws IOException {
 
@@ -908,12 +909,38 @@ public class RelatorioViagemService {
                                     conteudo,
                                     fonteNormal,
                                     10,
-                                    "Custo estimado: R$ "
-                                            + item.getCustoEstimado(),
+                                    "Custo estimado: "
+                                            + formatarDinheiro(item.getCustoEstimado()),
                                     x + 15,
                                     y
                             );
 
+                            y -= 18;
+                        }
+
+                        List<ItemOrcamento> custosDoLocal =
+                                itensOrcamento.stream()
+                                        .filter(custo -> custo.getDescricao() != null
+                                                && (custo.getDescricao().equals(item.getTitulo())
+                                                || custo.getDescricao().startsWith(item.getTitulo() + " -")))
+                                        .toList();
+
+                        for (ItemOrcamento custo : custosDoLocal) {
+                            String rotulo = switch (custo.getCategoria()) {
+                                case VISITAS -> "Visita";
+                                case ALIMENTACAO -> "Alimentacao";
+                                case TRANSPORTE_LOCAL -> "Transporte local";
+                                default -> null;
+                            };
+                            if (rotulo == null) continue;
+                            escreverTexto(
+                                    conteudo,
+                                    fonteNormal,
+                                    10,
+                                    rotulo + " estimado: " + formatarDinheiro(custo.getValor()),
+                                    x + 15,
+                                    y
+                            );
                             y -= 18;
                         }
 
