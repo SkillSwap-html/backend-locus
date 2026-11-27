@@ -168,11 +168,22 @@ public class OfertasSimuladasClient {
         oferta.put("id", "LOCUS-HOTEL-OFFER-" + (indice + 1)).put("checkInDate", entrada.toString()).put("checkOutDate", saida.toString())
                 .put("roomQuantity", quartos).put("adults", adultos).put("nights", noites);
         oferta.putObject("room").put("type", "STANDARD").put("typeEstimated", "DOUBLE");
-        BigDecimal diaria = BigDecimal.valueOf(420 + indice * 145L);
+        BigDecimal diaria = diariaHotel(codigo, indice);
         BigDecimal total = diaria.multiply(BigDecimal.valueOf(noites)).multiply(BigDecimal.valueOf(quartos)).setScale(2, RoundingMode.HALF_UP);
         oferta.putObject("price").put("currency", moeda.toUpperCase(Locale.ROOT)).put("total", total)
                 .put("nightly", diaria).put("nights", noites);
         return item;
+    }
+
+    private BigDecimal diariaHotel(String codigo, int indice) {
+        long[] faixas = switch (codigo.toUpperCase(Locale.ROOT)) {
+            case "PAR", "LON", "ZRH", "NYC" -> new long[]{820, 1150, 1550};
+            case "LIS", "FNC", "OPO" -> new long[]{520, 720, 980};
+            case "CUR", "AUA" -> new long[]{680, 900, 1250};
+            case "SSA", "REC", "FOR", "NAT", "GIG", "GRU" -> new long[]{360, 520, 760};
+            default -> new long[]{420, 620, 900};
+        };
+        return BigDecimal.valueOf(faixas[Math.max(0, Math.min(indice, faixas.length - 1))]);
     }
 
     private double faixaBaseVoo(String origem, String destino) {
