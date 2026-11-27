@@ -76,11 +76,12 @@ public class GooglePlacesClient {
 
     public JsonNode details(String placeId) {
         requireConfiguration();
+        String id = placeId == null ? "" : placeId.replaceFirst("^places/", "");
 
         try {
             return client()
                     .get()
-                    .uri("/v1/places/" + placeId)
+                    .uri("/v1/places/" + id)
                     .header("X-Goog-Api-Key", properties.getApiKey())
                     .header("X-Goog-FieldMask",
                             "id,displayName,formattedAddress,location,rating,"
