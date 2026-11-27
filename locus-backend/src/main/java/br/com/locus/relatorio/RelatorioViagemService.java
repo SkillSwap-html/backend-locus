@@ -322,6 +322,13 @@ public class RelatorioViagemService {
                     fonteNegrito
             );
 
+            criarPaginasItensOrcamento(
+                    documento,
+                    itensOrcamento,
+                    fonteNormal,
+                    fonteNegrito
+            );
+
             criarPaginasRoteiro(
                     documento,
                     diasRoteiro,
@@ -588,37 +595,20 @@ public class RelatorioViagemService {
 
             y -= 20;
 
-            if (itensOrcamento.isEmpty()) {
-                escreverTexto(
-                        conteudo,
-                        fonteNormal,
-                        10,
-                        "Nenhum item de orçamento foi registrado.",
-                        x,
-                        y
-                );
-                y -= 18;
-            } else {
-                for (ItemOrcamento item : itensOrcamento) {
-                    escreverTexto(
-                            conteudo,
-                            fonteNormal,
-                            9,
-                            item.getCategoria()
-                                    + " - "
-                                    + item.getDescricao()
-                                    + ": "
-                                    + formatarDinheiro(item.getValor())
-                                    + " | Fonte: "
-                                    + item.getFonte(),
-                            x + 15,
-                            y
-                    );
-                    y -= 16;
-                }
-            }
+            escreverTextoQuebrado(
+                    conteudo,
+                    fonteNormal,
+                    10,
+                    itensOrcamento.isEmpty()
+                            ? "Nenhum item de orçamento foi registrado."
+                            : "Os itens de orçamento estão detalhados em uma página própria deste relatório.",
+                    x,
+                    y,
+                    512,
+                    15
+            );
 
-            y -= 20;
+            y -= 38;
 
             escreverTexto(
                     conteudo,
@@ -762,217 +752,324 @@ public class RelatorioViagemService {
             List<ItemOrcamento> itensOrcamento,
             PDType1Font fonteNormal,
             PDType1Font fonteNegrito) throws IOException {
-
         if (diasRoteiro.isEmpty()) {
-
             PDPage pagina = new PDPage();
             documento.addPage(pagina);
-
-            try (PDPageContentStream conteudo =
-                         new PDPageContentStream(
-                                 documento,
-                                 pagina
-                         )) {
-
-                desenharLogo(conteudo, 50, 755, fonteNormal, fonteNegrito);
-
-                escreverTexto(
-                        conteudo,
-                        fonteNegrito,
-                        16,
-                        "Roteiro da Viagem",
-                        50,
-                        735
-                );
-
-                escreverTexto(
-                        conteudo,
-                        fonteNormal,
-                        11,
-                        "Nenhum roteiro foi cadastrado para esta viagem.",
-                        50,
-                        710
-                );
+            try (PDPageContentStream conteudo = new PDPageContentStream(documento, pagina)) {
+                desenharLogo(conteudo, 50, 750, fonteNormal, fonteNegrito);
+                escreverTexto(conteudo, fonteNegrito, 16, "Roteiro da Viagem", 50, 710);
+                escreverTexto(conteudo, fonteNormal, 11,
+                        "Nenhum roteiro foi cadastrado para esta viagem.", 50, 680);
             }
-
             return;
         }
 
         for (DiaRoteiro dia : diasRoteiro) {
+            List<ItemRoteiro> itens = itemRoteiroRepository
+                    .findByDiaRoteiroIdOrderByOrdemAsc(dia.getId());
+            int indiceItem = 0;
+            boolean primeiraPagina = true;
 
+            do {
+                PDPage pagina = new PDPage();
+                documento.addPage(pagina);
+
+                try (PDPageContentStream conteudo = new PDPageContentStream(documento, pagina)) {
+                    float x = 50;
+                    float y = 710;
+                    desenharLogo(conteudo, x, 750, fonteNormal, fonteNegrito);
+
+                    escreverTexto(
+                            conteudo,
+                            fonteNegrito,
+                            16,
+                            "Roteiro - " + dia.getData() + (primeiraPagina ? "" : " (continuacao)"),
+                            x,
+                            y
+                    );
+                    y -= 30;
+
+                    if (primeiraPagina && dia.getObservacoes() != null
+                            && !dia.getObservacoes().isBlank()) {
+                        y = escreverTextoQuebrado(
+                                conteudo,
+                                fonteNormal,
+                                10,
+                                "Observacoes: " + dia.getObservacoes(),
+                                x,
+                                y,
+                                512,
+                                15
+                        ) - 12;
+                    }
+
+                    if (itens.isEmpty()) {
+                        escreverTexto(conteudo, fonteNormal, 11,
+                                "Nenhuma atividade cadastrada para este dia.", x, y);
+                    } else {
+                        while (indiceItem < itens.size()) {
+                            ItemRoteiro item = itens.get(indiceItem);
+                            List<ItemOrcamento> custosDoLocal = itensOrcamento.stream()
+                                    .filter(custo -> custo.getDescricao() != null
+                                            && (custo.getDescricao().equals(item.getTitulo())
+                                            || custo.getDescricao().startsWith(item.getTitulo() + " -")))
+                                    .toList();
+                            String motivo = limparMotivo(item.getMotivoRecomendacao());
+                            float altura = alturaItemRoteiro(item, custosDoLocal, motivo,
+                                    fonteNormal, fonteNegrito);
+
+                            if (indiceItem > 0 && y - altura < 55) {
+                                break;
+                            }
+
+                            y = escreverTextoQuebrado(
+                                    conteudo,
+                                    fonteNegrito,
+                                    11,
+                                    item.getOrdem() + ". " + item.getTitulo(),
+                                    x,
+                                    y,
+                                    512,
+                                    16
+                            ) - 4;
+                            y = escreverTextoQuebrado(
+                                    conteudo,
+                                    fonteNormal,
+                                    10,
+                                    "Horario: " + item.getHorarioInicio()
+                                            + " | Duracao: " + item.getDuracaoMinutos() + " minutos",
+                                    x + 15,
+                                    y,
+                                    497,
+                                    15
+                            ) - 3;
+
+                            if (item.getLugar() != null) {
+                                y = escreverTextoQuebrado(conteudo, fonteNormal, 10,
+                                        "Lugar: " + item.getLugar().getNome(), x + 15, y, 497, 15) - 3;
+                            }
+                            if (item.getCustoEstimado() != null) {
+                                y = escreverTextoQuebrado(conteudo, fonteNormal, 10,
+                                        "Custo estimado: " + formatarDinheiro(
+                                                BigDecimal.valueOf(item.getCustoEstimado())),
+                                        x + 15, y, 497, 15) - 3;
+                            }
+                            for (ItemOrcamento custo : custosDoLocal) {
+                                String rotulo = switch (custo.getCategoria()) {
+                                    case VISITAS -> "Visita";
+                                    case ALIMENTACAO -> "Alimentacao";
+                                    case TRANSPORTE_LOCAL -> "Transporte local";
+                                    case EXTRAS -> "Extras";
+                                    default -> null;
+                                };
+                                if (rotulo == null) continue;
+                                y = escreverTextoQuebrado(conteudo, fonteNormal, 10,
+                                        rotulo + " estimado: " + formatarDinheiro(custo.getValor()),
+                                        x + 15, y, 497, 15) - 3;
+                            }
+                            if (!motivo.isBlank()) {
+                                y = escreverTextoQuebrado(conteudo, fonteNormal, 10,
+                                        "Motivo: " + motivo, x + 15, y, 497, 15);
+                            }
+                            y -= 12;
+                            indiceItem++;
+                        }
+                    }
+                }
+                primeiraPagina = false;
+            } while (indiceItem < itens.size());
+        }
+    }
+
+    private void criarPaginasItensOrcamento(
+            PDDocument documento,
+            List<ItemOrcamento> itensOrcamento,
+            PDType1Font fonteNormal,
+            PDType1Font fonteNegrito) throws IOException {
+
+        if (itensOrcamento.isEmpty()) {
+            return;
+        }
+
+        int indiceItem = 0;
+        boolean primeiraPagina = true;
+        do {
             PDPage pagina = new PDPage();
             documento.addPage(pagina);
-
-            try (PDPageContentStream conteudo =
-                         new PDPageContentStream(
-                                 documento,
-                                 pagina
-                         )) {
-
+            try (PDPageContentStream conteudo = new PDPageContentStream(documento, pagina)) {
                 float x = 50;
-                // Mantém o mesmo cabeçalho reservado nas páginas de cada dia.
                 float y = 710;
-
-                desenharLogo(conteudo, x, 755, fonteNormal, fonteNegrito);
-
+                desenharLogo(conteudo, x, 750, fonteNormal, fonteNegrito);
                 escreverTexto(
                         conteudo,
                         fonteNegrito,
                         16,
-                        "Roteiro - " + dia.getData(),
+                        primeiraPagina
+                                ? "Itens do orcamento"
+                                : "Itens do orcamento (continuacao)",
                         x,
                         y
                 );
-
                 y -= 30;
 
-                if (dia.getObservacoes() != null
-                        && !dia.getObservacoes().isBlank()) {
-
-                    escreverTexto(
-                            conteudo,
-                            fonteNormal,
-                            10,
-                            "Observacoes: "
-                                    + dia.getObservacoes(),
-                            x,
-                            y
-                    );
-
-                    y -= 30;
-                }
-
-                List<ItemRoteiro> itens =
-                        itemRoteiroRepository
-                                .findByDiaRoteiroIdOrderByOrdemAsc(
-                                        dia.getId()
-                                );
-
-                if (itens.isEmpty()) {
-
-                    escreverTexto(
-                            conteudo,
-                            fonteNormal,
-                            11,
-                            "Nenhuma atividade cadastrada para este dia.",
-                            x,
-                            y
-                    );
-
-                } else {
-
-                    for (ItemRoteiro item : itens) {
-
-                        escreverTexto(
-                                conteudo,
-                                fonteNegrito,
-                                11,
-                                item.getOrdem()
-                                        + ". "
-                                        + item.getTitulo(),
-                                x,
-                                y
-                        );
-
-                        y -= 20;
-
-                        escreverTexto(
-                                conteudo,
-                                fonteNormal,
-                                10,
-                                "Horario: "
-                                        + item.getHorarioInicio()
-                                        + " | Duracao: "
-                                        + item.getDuracaoMinutos()
-                                        + " minutos",
-                                x + 15,
-                                y
-                        );
-
-                        y -= 18;
-
-                        if (item.getLugar() != null) {
-
-                            escreverTexto(
-                                    conteudo,
-                                    fonteNormal,
-                                    10,
-                                    "Lugar: "
-                                            + item.getLugar()
-                                            .getNome(),
-                                    x + 15,
-                                    y
-                            );
-
-                            y -= 18;
-                        }
-
-                        if (item.getCustoEstimado() != null) {
-
-                            escreverTexto(
-                                    conteudo,
-                                    fonteNormal,
-                                    10,
-                                    "Custo estimado: "
-                                            + formatarDinheiro(
-                                                    BigDecimal.valueOf(item.getCustoEstimado())),
-                                    x + 15,
-                                    y
-                            );
-
-                            y -= 18;
-                        }
-
-                        List<ItemOrcamento> custosDoLocal =
-                                itensOrcamento.stream()
-                                        .filter(custo -> custo.getDescricao() != null
-                                                && (custo.getDescricao().equals(item.getTitulo())
-                                                || custo.getDescricao().startsWith(item.getTitulo() + " -")))
-                                        .toList();
-
-                        for (ItemOrcamento custo : custosDoLocal) {
-                            String rotulo = switch (custo.getCategoria()) {
-                                case VISITAS -> "Visita";
-                                case ALIMENTACAO -> "Alimentacao";
-                                case TRANSPORTE_LOCAL -> "Transporte local";
-                                case EXTRAS -> "Extras";
-                                default -> null;
-                            };
-                            if (rotulo == null) continue;
-                            escreverTexto(
-                                    conteudo,
-                                    fonteNormal,
-                                    10,
-                                    rotulo + " estimado: " + formatarDinheiro(custo.getValor()),
-                                    x + 15,
-                                    y
-                            );
-                            y -= 18;
-                        }
-
-                        if (item.getMotivoRecomendacao() != null
-                                && !item.getMotivoRecomendacao()
-                                .isBlank()) {
-
-                            escreverTexto(
-                                    conteudo,
-                                    fonteNormal,
-                                    10,
-                                    "Motivo: "
-                                            + item
-                                            .getMotivoRecomendacao(),
-                                    x + 15,
-                                    y
-                            );
-
-                            y -= 18;
-                        }
-
-                        y -= 15;
+                while (indiceItem < itensOrcamento.size()) {
+                    ItemOrcamento item = itensOrcamento.get(indiceItem);
+                    String texto = item.getCategoria()
+                            + " - " + item.getDescricao()
+                            + ": " + formatarDinheiro(item.getValor())
+                            + " | Fonte: " + item.getFonte();
+                    float altura = alturaTexto(fonteNormal, 9, texto, 482, 14) + 8;
+                    if (indiceItem > 0 && y - altura < 55) {
+                        break;
                     }
+                    y = escreverTextoQuebrado(
+                            conteudo,
+                            fonteNormal,
+                            9,
+                            texto,
+                            x + 15,
+                            y,
+                            482,
+                            14
+                    ) - 8;
+                    indiceItem++;
                 }
             }
+            primeiraPagina = false;
+        } while (indiceItem < itensOrcamento.size());
+    }
+
+    private float alturaItemRoteiro(
+            ItemRoteiro item,
+            List<ItemOrcamento> custosDoLocal,
+            String motivo,
+            PDType1Font fonteNormal,
+            PDType1Font fonteNegrito) throws IOException {
+
+        float altura = alturaTexto(
+                fonteNegrito,
+                11,
+                item.getOrdem() + ". " + item.getTitulo(),
+                512,
+                16
+        ) + 4;
+        altura += alturaTexto(
+                fonteNormal,
+                10,
+                "Horario: " + item.getHorarioInicio()
+                        + " | Duracao: " + item.getDuracaoMinutos() + " minutos",
+                497,
+                15
+        ) + 3;
+        if (item.getLugar() != null) {
+            altura += alturaTexto(fonteNormal, 10,
+                    "Lugar: " + item.getLugar().getNome(), 497, 15) + 3;
         }
+        if (item.getCustoEstimado() != null) {
+            altura += alturaTexto(fonteNormal, 10,
+                    "Custo estimado: " + formatarDinheiro(
+                            BigDecimal.valueOf(item.getCustoEstimado())),
+                    497, 15) + 3;
+        }
+        for (ItemOrcamento custo : custosDoLocal) {
+            String rotulo = switch (custo.getCategoria()) {
+                case VISITAS -> "Visita";
+                case ALIMENTACAO -> "Alimentacao";
+                case TRANSPORTE_LOCAL -> "Transporte local";
+                case EXTRAS -> "Extras";
+                default -> null;
+            };
+            if (rotulo != null) {
+                altura += alturaTexto(fonteNormal, 10,
+                        rotulo + " estimado: " + formatarDinheiro(custo.getValor()),
+                        497, 15) + 3;
+            }
+        }
+        if (!motivo.isBlank()) {
+            altura += alturaTexto(fonteNormal, 10,
+                    "Motivo: " + motivo, 497, 15);
+        }
+        return altura + 12;
+    }
+
+    private float escreverTextoQuebrado(
+            PDPageContentStream conteudo,
+            PDType1Font fonte,
+            float tamanho,
+            String texto,
+            float x,
+            float y,
+            float larguraMaxima,
+            float espacamentoLinha) throws IOException {
+
+        for (String linha : quebrarLinhas(fonte, tamanho, texto, larguraMaxima)) {
+            escreverTexto(conteudo, fonte, tamanho, linha, x, y);
+            y -= espacamentoLinha;
+        }
+        return y;
+    }
+
+    private float alturaTexto(
+            PDType1Font fonte,
+            float tamanho,
+            String texto,
+            float larguraMaxima,
+            float espacamentoLinha) throws IOException {
+
+        return quebrarLinhas(fonte, tamanho, texto, larguraMaxima).size()
+                * espacamentoLinha;
+    }
+
+    private List<String> quebrarLinhas(
+            PDType1Font fonte,
+            float tamanho,
+            String texto,
+            float larguraMaxima) throws IOException {
+
+        String normalizado = normalizarPdf(texto == null ? "" : texto)
+                .replace("\r", "");
+        List<String> linhas = new java.util.ArrayList<>();
+        for (String paragrafo : normalizado.split("\n", -1)) {
+            String[] palavras = paragrafo.trim().split("\\s+");
+            if (paragrafo.isBlank()) {
+                linhas.add("");
+                continue;
+            }
+            String linhaAtual = "";
+            for (String palavra : palavras) {
+                String candidata = linhaAtual.isBlank()
+                        ? palavra
+                        : linhaAtual + " " + palavra;
+                float largura = fonte.getStringWidth(candidata) / 1000f * tamanho;
+                if (linhaAtual.isBlank() || largura <= larguraMaxima) {
+                    linhaAtual = candidata;
+                } else {
+                    linhas.add(linhaAtual);
+                    linhaAtual = palavra;
+                }
+            }
+            if (!linhaAtual.isBlank()) {
+                linhas.add(linhaAtual);
+            }
+        }
+        return linhas.isEmpty() ? List.of("") : linhas;
+    }
+
+    private String limparMotivo(String motivo) {
+        if (motivo == null || motivo.isBlank()) {
+            return "";
+        }
+        return motivo.trim()
+                .replaceAll(
+                        "(?i)(Confira o Street View antes de adicionar\\.\\s*){2,}",
+                        "Confira o Street View antes de adicionar. "
+                )
+                .replaceAll(
+                        "(?i)Encontrado no Google Places\\s*;\\s*confira o Street View antes de adicionar\\.",
+                        "Encontrado no Google Places. Confira o Street View antes de adicionar."
+                )
+                .replaceAll("\\s{2,}", " ")
+                .trim();
     }
 
     private void escreverLinha(
