@@ -1061,14 +1061,19 @@ public class RelatorioViagemService {
         }
         return motivo.trim()
                 .replaceAll(
-                        "(?i)(Confira o Street View antes de adicionar\\.\\s*){2,}",
-                        "Confira o Street View antes de adicionar. "
+                        "(?i)Encontrado no Google Places\\s*[.;]?\\s*",
+                        ""
                 )
                 .replaceAll(
-                        "(?i)Encontrado no Google Places\\s*;\\s*confira o Street View antes de adicionar\\.",
-                        "Encontrado no Google Places. Confira o Street View antes de adicionar."
+                        "(?i)(Confira o Street View antes de adicionar\\.\\s*)+",
+                        ""
+                )
+                .replaceAll(
+                        "(?i)O valor [eé] uma estimativa e ser[aá] somado somente se voc[eê] adicionar o local\\.?",
+                        ""
                 )
                 .replaceAll("\\s{2,}", " ")
+                .replaceAll("\\s+([.,;])", "$1")
                 .trim();
     }
 

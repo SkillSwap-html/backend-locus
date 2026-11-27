@@ -90,7 +90,7 @@ public class IntegracoesController {
                         + "Para ônibus, procure tarifas atuais na web quando houver busca disponível; se não encontrar, entregue apenas uma estimativa identificada como simulada. "
                         + "Para carro, use a distância calculada pelo Routes, o modelo e o consumo informado nas preferências e procure o preço atual do combustível no país de origem; "
                         + "calcule litros = distância total / km por litro e custo = litros x preço por litro, sempre mostrando a conta e marcando qualquer dado não encontrado como estimativa. "
-                        + "Para cada sugestão de lugar, incentive a conferência no mapa e no Street View. "
+                        + "Para cada sugestão de lugar, informe a localização confirmada e a fonte sem repetir instruções de conferência no mapa ou no Street View. "
                         + "O Locus só realiza reservas e pagamentos simulados, nunca compras reais.\n\n"
                         + request.prompt()
         );
