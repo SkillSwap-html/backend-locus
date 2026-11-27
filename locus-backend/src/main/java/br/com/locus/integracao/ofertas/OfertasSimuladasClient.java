@@ -116,7 +116,8 @@ public class OfertasSimuladasClient {
     }
 
     private ObjectNode ofertaVoo(String origem, String destino, LocalDate ida, String volta, String moeda, int adultos, int indice) {
-        String companhia = indice == 0 ? "LA" : indice == 1 ? "AD" : "G3";
+        String companhia = indice == 0 ? "LA" : indice == 1 ? "AD" : "GDA";
+        String nomeCompanhia = indice == 0 ? "LATAM" : indice == 1 ? "Azul" : "Gol da Alemanha";
         String numero = String.valueOf(3000 + indice * 117);
         double faixaBase = faixaBaseVoo(origem, destino);
         boolean idaEVolta = volta != null && !volta.isBlank();
@@ -127,7 +128,8 @@ public class OfertasSimuladasClient {
         ObjectNode oferta = mapper.createObjectNode();
         oferta.put("type", "flight-offer").put("id", "LOCUS-FLIGHT-" + (indice + 1));
         oferta.put("source", "LOCUS").put("simulated", true).put("oneWay", !idaEVolta)
-                .put("travelerCount", adultos).put("roundTrip", idaEVolta);
+                .put("travelerCount", adultos).put("roundTrip", idaEVolta)
+                .put("airlineName", nomeCompanhia);
         ArrayNode itinerarios = oferta.putArray("itineraries");
         itinerarios.add(itinerario(origem, destino, partida, companhia, numero, indice));
         if (volta != null && !volta.isBlank()) {
