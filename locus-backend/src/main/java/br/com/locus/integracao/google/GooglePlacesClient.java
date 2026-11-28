@@ -43,6 +43,7 @@ public class GooglePlacesClient {
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("textQuery", textQuery);
+        body.put("pageSize", 20);
         if (languageCode != null && !languageCode.isBlank()) {
             body.put("languageCode", languageCode);
         }
