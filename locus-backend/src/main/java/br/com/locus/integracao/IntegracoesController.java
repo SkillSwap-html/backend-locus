@@ -4,6 +4,7 @@ import br.com.locus.integracao.google.GooglePlacesClient;
 import br.com.locus.integracao.google.GoogleRoutesClient;
 import br.com.locus.integracao.google.GoogleStreetViewClient;
 import br.com.locus.integracao.ofertas.OfertasSimuladasClient;
+import br.com.locus.integracao.catalogo.CatalogoLocaisService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,6 +21,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/integracoes")
@@ -30,19 +32,22 @@ public class IntegracoesController {
     private final GoogleRoutesClient routesClient;
     private final GoogleStreetViewClient streetViewClient;
     private final OfertasSimuladasClient ofertasSimuladasClient;
+    private final CatalogoLocaisService catalogoLocaisService;
 
     public IntegracoesController(
             AssistenteViagemClient assistenteViagemClient,
             GooglePlacesClient placesClient,
             GoogleRoutesClient routesClient,
             GoogleStreetViewClient streetViewClient,
-            OfertasSimuladasClient ofertasSimuladasClient) {
+            OfertasSimuladasClient ofertasSimuladasClient,
+            CatalogoLocaisService catalogoLocaisService) {
 
         this.assistenteViagemClient = assistenteViagemClient;
         this.placesClient = placesClient;
         this.routesClient = routesClient;
         this.streetViewClient = streetViewClient;
         this.ofertasSimuladasClient = ofertasSimuladasClient;
+        this.catalogoLocaisService = catalogoLocaisService;
     }
 
     @PostMapping("/gemini/conteudo")
@@ -104,6 +109,19 @@ public class IntegracoesController {
                 request.textQuery(),
                 request.languageCode()
         );
+    }
+
+    /**
+     * Retorna locais específicos previamente curados para os principais
+     * destinos, mantendo endereço e coordenadas mesmo durante uma limitação
+     * temporária do Google Places.
+     */
+    @GetMapping("/catalogo-locais")
+    public Map<String, Object> buscarLocaisDoCatalogo(
+            @RequestParam @NotBlank @Size(max = 300) String consulta) {
+
+        List<CatalogoLocaisService.CatalogoLocal> lugares = catalogoLocaisService.buscar(consulta);
+        return Map.of("lugares", lugares, "fallback", true);
     }
 
     @PostMapping("/google/places/autocomplete")
