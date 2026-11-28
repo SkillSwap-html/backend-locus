@@ -116,7 +116,7 @@ public class OfertasSimuladasClient {
     }
 
     private ObjectNode ofertaVoo(String origem, String destino, LocalDate ida, String volta, String moeda, int adultos, int indice) {
-        String companhia = indice == 0 ? "LA" : indice == 1 ? "AD" : "G3";
+        String companhia = indice == 0 ? "LA" : indice == 1 ? "AD" : "Gol da Alemanha";
         String numero = String.valueOf(3000 + indice * 117);
         double faixaBase = faixaBaseVoo(origem, destino);
         boolean idaEVolta = volta != null && !volta.isBlank();
